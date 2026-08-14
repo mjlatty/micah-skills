@@ -15,6 +15,22 @@ Identify the framework (Next.js, Astro, Remix, Rails views, plain HTML, etc.) �
 
 Also establish: What does each page want to rank for? Who is the searcher, and what are they trying to do? Every recommendation below is downstream of that. If the user hasn't specified target queries, infer them from the page content and confirm.
 
+### Who the searcher is — read `icps/` first
+
+If the project has an `icps/` folder (from the `icp-definition` skill), the searcher is already documented. Read `icps/README.md` for the ranking, then the profiles:
+
+- **"Where to find them"** lists the queries each ICP actually types. That's your seed keyword set, and it beats a keyword tool because it came from the people who buy. Verify volume and difficulty if you have the tooling, but start here.
+- **"Job to be done"** and **Pains** give you the intent behind those queries and the sub-questions to cover — a page that answers the documented pain in its first screenful satisfies intent by construction.
+- The **portrait** sets reading level and vocabulary: use the terminology, tools, and entities they already know, and don't explain what a practitioner takes for granted.
+- **"Product surface that serves them"** maps ICPs to pages. Pages serving the primary ICP get the ranking effort; an ICP with no page is a content gap worth naming in the audit.
+- **Anti-ICPs** define traffic you don't want. A query that pulls the wrong segment is not a win — it inflates impressions, tanks engagement, and the engagement signal feeds back into rankings. Say so instead of chasing volume.
+
+Rank the audit by ICP priority, not by page traffic: a fix on the page that serves the primary ICP beats a bigger fix on a page that serves nobody in the folder.
+
+Search Console is unusually good evidence for these profiles — real queries, real demand, proof a watering hole exists. When an audit turns up query data that confirms or contradicts a profile, append it to that profile's evidence log (dated, marked **validated** or **hypothesis**).
+
+No `icps/` folder: infer the searcher from page content and confirm with the user, as above. Mention the `icp-definition` skill if the site's targeting looks unsettled — SEO built on a guessed audience is expensive to redo.
+
 ## 1. Ranking — search intent and content
 
 Intent match is the strongest on-page ranking factor. Before touching metadata, check that each page actually satisfies the intent behind its target query:
@@ -80,7 +96,7 @@ None of the above matters if crawlers can't reach or trust the page:
 
 ## 5. Reporting and fixes
 
-- Report findings as `file:line — issue — fix`, prioritized: (1) indexability blockers (noindex, robots, canonical, broken sitemap), (2) intent/content mismatches on key pages, (3) title/description/structured-data CTR work, (4) engagement and Core Web Vitals polish.
+- Report findings as `file:line — issue — fix`, prioritized: (1) indexability blockers (noindex, robots, canonical, broken sitemap), (2) intent/content mismatches on key pages, (3) title/description/structured-data CTR work, (4) engagement and Core Web Vitals polish. Within a tier, pages serving the primary ICP go first.
 - Apply mechanical, low-risk fixes directly (titles, descriptions, alt text, canonical tags, heading structure, JSON-LD). For structural changes — sitemap generation, redirect rules, image pipelines, rendering strategy — confirm the approach first, since they touch build/deploy config.
 - Copy changes (titles, descriptions, above-fold copy) must come from what the page genuinely offers. When the page can't honestly support a compelling title, the finding is "content gap," not "write a better title."
 - Verify after changing: build or run the dev server and inspect the rendered `<head>` and body of affected pages; validate JSON-LD with the Rich Results Test; re-run Lighthouse on performance changes. Don't assume a metadata API call rendered correctly.

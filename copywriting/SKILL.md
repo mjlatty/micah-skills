@@ -10,11 +10,35 @@ Write high-converting, friendly, human copy based on the conversation thread and
 ## Before writing
 
 1. If `docs/copywriting/copywriting-prompt.md` exists in the current project, read it — its brand voice, style, and structure rules override anything below.
-2. Establish the essentials. If any are missing and not inferable from context, ask before writing:
+2. **Read `icps/` if the project has one** (see next section). It answers the audience question with evidence instead of a guess.
+3. Establish the essentials. If any are missing and not inferable from context, ask before writing:
    - **Audience** — who is this for, and how sophisticated are they about the problem?
    - **Goal** — the one action the reader should take (sign up, buy, reply, click).
    - **Channel** — landing page, ad, email, social post, product description. Channel dictates length and form.
    - **The one big idea** — the single most compelling claim. One piece of copy sells one idea; if there are two, that's two pieces of copy.
+
+## Write to the ICP
+
+If the project has an `icps/` folder (produced by the `icp-definition` skill), it is the audience brief — read `icps/README.md` for the ranking, then the profile for whoever this piece targets. Default to the **primary** ICP; if the user names a different one, use that. Never write to an **anti-ICP** or a documented lookalike — copy that pulls them in costs more in support than it earns.
+
+The profile maps onto the copy directly:
+
+| Profile section | What it decides |
+|---|---|
+| Portrait | Awareness level, and the vocabulary they use for the problem — mirror their words, not the product's |
+| Motivations | What the copy speaks to: the outcome they want, the way they want to be seen |
+| Pains | What the product fixes — the proof, not the pitch. Dollarized pains become your specific claims |
+| Buying trigger | When the CTA lands, and whether urgency is real or has to be manufactured (it shouldn't be) |
+| What they do today | The thing you're switching them from. Name it honestly and beat it on one axis |
+| Willingness to pay | Where price sits and which objection to handle next to the CTA |
+| Friction & caveats | The objections to answer before they're raised, and what not to over-promise |
+
+Two rules that follow from it:
+
+- **One ICP per piece.** Copy aimed at two profiles speaks to neither — same reason one piece sells one idea. Write two.
+- **Don't launder hypotheses into claims.** Profile lines are tagged **validated** or **hypothesis** in the evidence log. A validated pain can become a headline; a hypothesis can't become "teams waste 6 hours a week." Ask for the real number or write around it.
+
+No `icps/` folder? Say so, ask the audience questions above, and mention that the `icp-definition` skill would make this reusable — but don't block on it, and don't invent a persona to fill the gap.
 
 ## Core principles
 

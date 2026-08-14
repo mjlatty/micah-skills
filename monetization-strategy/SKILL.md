@@ -16,9 +16,28 @@ Strategize revenue paths for the operator below. Every recommendation must survi
 ## Process
 
 1. **Understand the project first.** Read the repo, product, or description before strategizing. Pin down: what job it does, who feels that pain most acutely, and what those people currently pay for alternatives (their current spend is the pricing anchor). If the project is only described vaguely and you can't inspect it, ask — a strategy for the wrong product is worthless.
-2. **Get real comps.** If web search is available, pull actual pricing pages of the 3–5 closest competitors or adjacent tools before setting numbers. Never invent comps.
-3. **Do the math backwards** (next section) before naming any model.
-4. **Generate 2–3 candidate paths, pressure-test distribution on each, rank, and deliver** in the output format below.
+2. **Read `icps/` if the project has one** (next section). Half the inputs below are already written down there.
+3. **Get real comps.** If web search is available, pull actual pricing pages of the 3–5 closest competitors or adjacent tools before setting numbers. Never invent comps.
+4. **Do the math backwards** (below) before naming any model.
+5. **Generate 2–3 candidate paths, pressure-test distribution on each, rank, and deliver** in the output format below.
+
+## Start from `icps/` when it exists
+
+A project with an `icps/` folder (from the `icp-definition` skill) has already done the expensive half of this work. Read `icps/README.md` for the ranking, then every profile — including the **later** and **anti** ones, which is where the reasons a path fails tend to be written down.
+
+- **Willingness to pay** and **What they do today** are the pricing anchor. Use the documented current spend instead of guessing at one, and say which profile a number came from.
+- **Buying trigger** decides whether the model is subscription, usage, or per-engagement. No trigger means the motion has to manufacture urgency, which a solo founder can't afford.
+- **Where to find them** is the distribution answer and the first-10-customers list, pre-written. A path whose channel appears in no profile has an unexamined channel.
+- **Friction & caveats** is the solo-load estimate. Activation friction that needs hand-holding is a support cost — price it in or rule the path out.
+- **Anti-ICPs** kill paths early. If a model's economics only work by selling to someone the project already said no to, that *is* the finding; surface it rather than quietly re-including them.
+
+Cite the profile a path is built on (`icps/billing-consultants.md`) so a rejected path can be re-litigated when its ICP's evidence changes.
+
+**When the analysis disagrees with the ranking, say so.** If the money is clearly in the #2 or a "later" profile, recommend a re-rank as its own deliverable rather than silently strategizing for a segment the folder deprioritized. In reverse: if no documented ICP can plausibly reach $10k/mo, that's the headline, not a footnote — the answer is a different ICP or a different product, not a cleverer price.
+
+**Feed evidence back.** Comps pulled, a price a buyer confirmed or refused, a channel that produced nothing — each is an evidence-log entry for the relevant profile. Append them (dated, marked **validated** or **hypothesis**) instead of leaving the folder frozen at the day it was written.
+
+With no `icps/` folder, do the segment work inline as before — and if the project will keep facing these decisions, suggest the `icp-definition` skill so the next one starts from something written down.
 
 ## Revenue math first
 
@@ -65,7 +84,7 @@ Consider these alongside the classic models — each exists because AI collapsed
 
 Every path must name its channel and why *this* founder wins there. Acceptable answers: SEO/programmatic SEO (compounds while solo), launch platforms (HN, Product Hunt — spike, not a channel), a specific community where the niche already congregates, platform marketplaces, build-in-public/content with an existing footing, or cold outbound (viable for B2B ≥$200/mo — AI makes personalized outbound at volume a one-person job). "Word of mouth" or "virality" with no seed mechanism is not a channel; kill or rework the path.
 
-Name the **first 10 customers** concretely — where they are and the exact motion to reach them. If you can't, the path isn't ready to rank.
+Name the **first 10 customers** concretely — where they are and the exact motion to reach them. If you can't, the path isn't ready to rank. When `icps/` exists, this list comes from the profile's "Where to find them"; if that section is too vague to produce 10 names, the gap is in the ICP, and fixing it there beats guessing here.
 
 ## Validate willingness to pay before building more
 
@@ -75,7 +94,7 @@ The founder's speed makes overbuilding the trap: shipping is cheaper than valida
 
 Deliver **2–3 ranked paths**, then one clear recommendation. For each path:
 
-- **Who pays and why** — the specific buyer and the pain that makes the purchase obvious
+- **Who pays and why** — the specific buyer and the pain that makes the purchase obvious. Link the ICP profile if there is one; if the path targets someone with no profile, say that outright
 - **Model + launch price** — charge 2–3x what feels comfortable; discounting later is easy, raising is hard. Anchor to comps and to what the buyer already spends on the problem.
 - **Math** — the exact customer count to $10k/mo, and the ceiling check against $25–50k
 - **Channel + first-10-customers plan**

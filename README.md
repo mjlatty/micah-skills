@@ -5,10 +5,21 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | Skill | What it's for |
 |---|---|
 | `code-tour` | Walks you through a PR or feature stop by stop, judging each part against the language idiom and the repo's own conventions |
+| `copywriting` | Marketing and landing-page copy that sells one idea to one audience |
+| `icp-definition` | Ranked, evidence-based customer profiles, written to the project as an `icps/` folder |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
 | `pr-description` | PR bodies at architecture altitude, with each regression risk paired to the test that guards it |
+| `product-changelog` | User-facing feature announcements from a branch |
 | `prose-style` | Editing pass that tightens prose without flattening its voice |
 | `reddit-research` | Pulls real Reddit discussion via archive APIs, since direct scraping is blocked |
+| `run-laravel-valet` | Cold-starts a Laravel app over HTTPS locally and verifies it serves real pages |
+| `seo-improvement` | Audits a site for rank, clickthrough, and engagement, and applies the low-risk fixes |
+| `technical-blog` | Technical posts written from the conversation that produced the work |
+
+`icp-definition` is the hub: it writes an `icps/` folder into a project, and `copywriting`,
+`seo-improvement`, `monetization-strategy`, `product-changelog`, and `technical-blog` read it for
+audience, queries, pricing anchors, and vocabulary instead of guessing. Each degrades gracefully when
+the folder isn't there.
 
 ## Install
 
