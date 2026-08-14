@@ -6,6 +6,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 |---|---|
 | `code-tour` | Walks you through a PR or feature stop by stop, judging each part against the language idiom and the repo's own conventions |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
+| `pr-description` | PR bodies at architecture altitude, with each regression risk paired to the test that guards it |
 | `prose-style` | Editing pass that tightens prose without flattening its voice |
 | `reddit-research` | Pulls real Reddit discussion via archive APIs, since direct scraping is blocked |
 
