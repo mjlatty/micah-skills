@@ -30,10 +30,23 @@ the folder isn't there.
 ./install.sh --uninstall     # remove what this repo owns
 ```
 
-Useful flags: `--target=claude,codex`, `--copy`, `--dry-run`, `--force`.
+Useful flags: `--target=claude,codex`, `--copy`, `--dry-run`, `--force`, `--here`.
 
 Skills are **symlinked** by default, so editing a `SKILL.md` here takes effect immediately in
 every harness — no reinstall step, no drift between copies.
+
+### Links that don't rot
+
+A symlink dies with the directory it points at, and worktree checkouts are disposable — a Conductor
+workspace is deleted the moment you close it, taking every skill linked from it. So the script links
+from the **main checkout**, no matter which worktree you run it from, and says which one it picked.
+Pass `--here` when you deliberately want a work-in-progress skill live in every harness; re-run
+without it once the branch merges.
+
+It also repairs on re-run rather than complaining. A link that dangles, or points into another
+checkout of this repo, is recognized as this repo's and repointed without `--force`; leftover links
+for skills that no longer exist here are pruned. Only an *edited* copy or a genuinely foreign entry
+is left alone — those might be someone else's work.
 
 ## How this works
 
