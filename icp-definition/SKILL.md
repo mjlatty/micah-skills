@@ -52,6 +52,16 @@ Each profile follows `references/icp-template.md` (also contains the README temp
 - **Specific enough to argue with.** "Billing consultants who know their clients' multipliers cold, charge $150–300/hr, and currently do fee-schedule math in Excel" is falsifiable and actionable. "Healthcare professionals" is neither.
 - **Solo-founder reachability check.** This operator is a solo technical founder, self-serve/low-touch only (see the monetization-strategy skill for the full profile). An ICP that requires enterprise sales cycles or a support team to serve is at best a *later*, and the profile should say so.
 
+## Who reads this folder
+
+`icps/` is an input to other work, not an artifact for its own sake. The `copywriting`, `seo-improvement`, `monetization-strategy`, `product-changelog`, and `technical-blog` skills all read it and expect the section names from the template — so keep the headings intact even when a section is thin, and write `Unknown — hypothesis:` rather than deleting one. Roughly who uses what:
+
+- **Motivations, pains, portrait, friction** → copy and announcements
+- **Where to find them** → SEO target queries and distribution channels
+- **Willingness to pay, what they do today, buying trigger** → pricing and model choice
+
+Those skills also feed evidence back: a query that converted, a price a buyer refused, a channel that produced nothing. Expect the evidence log to grow from outside this skill.
+
 ## Anti-patterns
 
 - **"Everyone with X problem."** That's a market, not an ICP. Segment until the watering holes have names.
