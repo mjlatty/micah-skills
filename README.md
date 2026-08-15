@@ -5,11 +5,22 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | Skill | What it's for |
 |---|---|
 | `code-tour` | Walks you through a PR or feature stop by stop, judging each part against the language idiom and the repo's own conventions |
+| `copywriting` | Marketing and landing-page copy that sells one idea to one audience |
+| `icp-definition` | Ranked, evidence-based customer profiles, written to the project as an `icps/` folder |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
-| `pr-description` | PR bodies at architecture altitude, with each regression risk paired to the test that guards it |
 | `post-deploy-checklist` | Captures manual post-deploy steps into a durable file that `pr-description` renders into the PR body |
+| `pr-description` | PR bodies at architecture altitude, with each regression risk paired to the test that guards it |
+| `product-changelog` | User-facing feature announcements from a branch |
 | `prose-style` | Editing pass that tightens prose without flattening its voice |
 | `reddit-research` | Pulls real Reddit discussion via archive APIs, since direct scraping is blocked |
+| `run-laravel-valet` | Cold-starts a Laravel app over HTTPS locally and verifies it serves real pages |
+| `seo-improvement` | Audits a site for rank, clickthrough, and engagement, and applies the low-risk fixes |
+| `technical-blog` | Technical posts written from the conversation that produced the work |
+
+`icp-definition` is the hub: it writes an `icps/` folder into a project, and `copywriting`,
+`seo-improvement`, `monetization-strategy`, `product-changelog`, and `technical-blog` read it for
+audience, queries, pricing anchors, and vocabulary instead of guessing. Each degrades gracefully when
+the folder isn't there.
 
 ## Install
 
@@ -20,10 +31,23 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 ./install.sh --uninstall     # remove what this repo owns
 ```
 
-Useful flags: `--target=claude,codex`, `--copy`, `--dry-run`, `--force`.
+Useful flags: `--target=claude,codex`, `--copy`, `--dry-run`, `--force`, `--here`.
 
 Skills are **symlinked** by default, so editing a `SKILL.md` here takes effect immediately in
 every harness — no reinstall step, no drift between copies.
+
+### Links that don't rot
+
+A symlink dies with the directory it points at, and worktree checkouts are disposable — a Conductor
+workspace is deleted the moment you close it, taking every skill linked from it. So the script links
+from the **main checkout**, no matter which worktree you run it from, and says which one it picked.
+Pass `--here` when you deliberately want a work-in-progress skill live in every harness; re-run
+without it once the branch merges.
+
+It also repairs on re-run rather than complaining. A link that dangles, or points into another
+checkout of this repo, is recognized as this repo's and repointed without `--force`; leftover links
+for skills that no longer exist here are pruned. Only an *edited* copy or a genuinely foreign entry
+is left alone — those might be someone else's work.
 
 ## How this works
 
