@@ -16,12 +16,16 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `reddit-research` | Pulls real Reddit discussion via archive APIs, since direct scraping is blocked |
 | `run-laravel-valet` | Cold-starts a Laravel app over HTTPS locally and verifies it serves real pages |
 | `seo-improvement` | Audits a site for rank, clickthrough, and engagement, and applies the low-risk fixes |
+| `skill-scout` | Records or audits friction, skill failures, and token waste, then harvests evidence into fixes |
 | `technical-blog` | Technical posts written from the conversation that produced the work |
 
 `icp-definition` is the hub: it writes an `icps/` folder into a project, and `copywriting`,
 `seo-improvement`, `monetization-strategy`, `product-changelog`, and `technical-blog` read it for
 audience, queries, pricing anchors, and vocabulary instead of guessing. Each degrades gracefully when
 the folder isn't there.
+
+`skill-scout` is the only hook-driven skill. See its [hook setup](skill-scout/references/setup.md) to
+collect evidence as it appears.
 
 ## Install
 
