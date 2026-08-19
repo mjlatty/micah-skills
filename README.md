@@ -12,6 +12,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `pr-description` | PR bodies at architecture altitude, with each regression risk paired to the test that guards it |
 | `product-changelog` | User-facing feature announcements from a branch |
 | `prose-style` | Editing pass that tightens prose without flattening its voice |
+| `reclaim-disk-space` | Traces a full disk or "out of application memory" to its real cause, then clears only what regenerates |
 | `reddit-research` | Pulls real Reddit discussion via archive APIs, since direct scraping is blocked |
 | `run-laravel-valet` | Cold-starts a Laravel app over HTTPS locally and verifies it serves real pages |
 | `seo-improvement` | Audits a site for rank, clickthrough, and engagement, and applies the low-risk fixes |
