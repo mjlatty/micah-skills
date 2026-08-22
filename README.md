@@ -8,6 +8,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `copywriting` | Marketing and landing-page copy that sells one idea to one audience |
 | `icp-definition` | Ranked, evidence-based customer profiles, written to the project as an `icps/` folder |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
+| `plan-docs` | Turns an agreed plan into a file the project keeps, and sorts `plans/` into draft/ready/in-progress/done by what the repo shows rather than what the plan claims |
 | `post-deploy-checklist` | Captures manual post-deploy steps into a durable file that `pr-description` renders into the PR body |
 | `pr-description` | PR bodies at architecture altitude, with each regression risk paired to the test that guards it |
 | `product-changelog` | User-facing feature announcements from a branch |
