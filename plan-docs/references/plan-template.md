@@ -1,14 +1,12 @@
 # Templates for the plans folder
 
-Three shapes: the standard plan, the design/implementation split for large efforts, and the `00`
-overview that makes a numbered set navigable. Start with the standard one — the others are what it
-grows into, not alternatives to choose between up front.
+Use one of three shapes: the standard plan, a design/implementation split for large efforts, or a
+numbered set with a `00` overview. Start with the standard plan. Let scale force the other shapes.
 
-Sections marked *(optional)* may be dropped when they'd be empty. **Decisions** never may: a plan
-without it is a checklist.
+Drop *(optional)* sections when empty. Keep **Decisions** whenever the effort involved real choices;
+never manufacture alternatives to fill it.
 
-Note what's absent from the frontmatter: there is **no `status:` field**. Status is the folder the
-file sits in. See the skill for why.
+The frontmatter has no `status:` field. The file's folder records its status.
 
 ---
 
@@ -25,57 +23,49 @@ updated: YYYY-MM-DD   # only once it's been meaningfully revised
 
 ## Goal
 
-<One paragraph: what is true after this ships that isn't true now, stated as an
-outcome rather than a task list. If you can't say what changes for a user or an
-operator, the plan isn't ready to write.>
+<One paragraph stating the outcome: what becomes true for a user or operator
+after this ships.>
 
 ## Context *(optional)*
 
-<What already exists that this builds on or must not duplicate — the pipeline,
-the helper, the table, the pattern, with file paths. This is the section that
-saves the implementer an hour of archaeology, and it's the reason a plan beats
-a chat message. Skip only when building on nothing.>
+<What this builds on or must not duplicate: pipelines, helpers, tables, and
+patterns, with file paths. Give the implementer a map of the relevant code.>
 
-## Decisions
+## Decisions *(optional when no alternatives existed)*
 
 <The load-bearing section. One entry per real choice:
 
 **<The decision.>** <Why this one.> Rejected: <the alternative> because
 <reason>.
 
-Only decisions that were genuinely open belong here — if there was never a
-second option, it's not a decision, it's a step. Two or three real ones beat a
-dozen manufactured ones. This is what you reread when someone asks "why isn't
-this a queue?" long after the diff stopped explaining itself.>
+Include only choices with real alternatives. Put predetermined work in Steps.
+Two or three real decisions beat a dozen manufactured ones. Preserve the
+reasoning the diff will not explain later.>
 
 ## Approach
 
-<The shape of the work: the components involved and how they fit. Enough that a
-reader can picture the end state without reading the steps. Diagrams, schemas,
-and interface sketches live here.>
+<The components involved and how they fit. Give readers a clear picture of the
+end state before the steps. Put diagrams, schemas, and interface sketches here.>
 
 ## Steps
 
-<Ordered, each one a coherent unit of work — ideally a PR. Say what "done"
-looks like for each, especially where it isn't obvious. Don't decompose to the
-level of individual edits; the implementer knows how to type.>
+<Order coherent units of work, ideally one per PR. Define completion where it
+may be unclear. Leave individual edits to the implementer.>
 
 ## Open questions *(optional)*
 
-<Anything genuinely unsettled, with who or what resolves it. A plan with
-entries here belongs in draft/ — that's the definition. Delete the section when
-the last one is answered, and move the file.>
+<Anything unsettled, plus who or what will resolve it. Entries here put the
+plan in draft/. Delete the section and move the file after resolving them.>
 
 ## Out of scope *(optional)*
 
-<What this deliberately doesn't do, and where it's deferred to. Prevents scope
-creep during implementation and pre-answers the first review question.>
+<What this deliberately excludes and where it is deferred. Set the boundary
+before implementation and review.>
 
-## Divergences *(added during implementation)*
+## Divergences *(optional; add during implementation)*
 
-<Append-only. When reality contradicts the plan, log it here with the date and
-what changed the call. This is what keeps a done/ plan honest about what
-actually shipped.>
+<Append-only. When reality contradicts the plan, log the date, the change, and
+what prompted it. Keep the done/ plan accurate to what shipped.>
 ```
 
 ---
@@ -84,14 +74,14 @@ actually shipped.>
 
 Two files, same slug, so they sort together:
 
-- **`<slug>-design.md`** — Goal, Context, Decisions, Approach, Open questions, Out of scope. Stays
-  short and stays true; this is the document that's still worth reading a year later.
+- **`<slug>-design.md`** — Goal, Context, Decisions, Approach, Open questions, Out of scope. Keep it
+  short and accurate; this is the document worth reading a year later.
 - **`<slug>-implementation.md`** — Steps in full detail: schemas, signatures, migration order, test
   plan, edge cases. Expected to get long and to go stale the moment the work starts. Link back to
   the design file at the top.
 
-Split when implementation detail would bury the reasoning — not by line count, but by whether
-someone looking for *why* has to wade through *how*. Below a few hundred lines, don't.
+Split when implementation detail buries the reasoning. Use whether *how* obscures *why*, not a hard
+line count. Keep plans under a few hundred lines together.
 
 ---
 
