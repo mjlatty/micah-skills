@@ -40,10 +40,18 @@ foreground `du` over `~/Library/Developer` has hit a 5-minute timeout before.
 
 ## 1. Survey everything in one background pass
 
-Run `scripts/survey.sh [extra dirs...]` from this skill's directory, in the background.
-It is read-only. It prints the vitals, APFS snapshots, live Xcode work, known cruft,
-and sizes of the usual homes (measured in parallel). While it runs, explain the
-diagnosis below; don't start probing directories by hand.
+Run `scripts/survey.sh` from this skill's directory, in the background. It is
+read-only. It prints the vitals, APFS snapshots, live Xcode work, and known cruft. Then
+it measures every top-level entry in `~` and `~/Library`, plus the system locations on
+the data volume (`/Applications`, `/Library`, `/opt`, simulator runtime images). While
+it runs, explain the diagnosis below; don't start probing directories by hand.
+
+**Read the accounting line first.** It compares what was measured with `df`'s used total.
+A small gap means the size list is the whole story, and the cleanup can be thorough by
+proof rather than by habit. A large gap means something is hidden: unreadable system
+directories, a local snapshot, or another user's files. Say so; don't report a cleanup
+as complete while tens of GiB are unexplained. A negative gap means APFS clones were
+counted twice (§8).
 
 ## 2. Separate the symptom from the cause
 
@@ -71,8 +79,13 @@ Take the largest entry from the survey and descend one level at a time until you
 something nameable:
 
 ```zsh
-find <dir> -mindepth 1 -maxdepth 1 -exec du -sk {} + 2>/dev/null | sort -rn | head -15
+find <dir> -mindepth 1 -maxdepth 1 -exec du -skx {} + 2>/dev/null | sort -rn | head -15
 ```
+
+Keep the `-x`. Simulator runtimes are disk images mounted under
+`/Library/Developer/CoreSimulator/Volumes`. Without `-x`, `du` counts their mounted
+contents: 123 GiB for a `/Library/Developer` that holds 23.5 GiB on disk. The images
+themselves live in `/System/Library/AssetsV2`.
 
 Stop when you can say *what* is big and *why it exists*, not just its path. Anything you
 never measured stays out of the report.
@@ -81,10 +94,10 @@ never measured stays out of the report.
 follows it, so a symlinked alias gets counted twice. Conductor symlinks *branch-name* →
 *city-name*. Skip links (`[ -L "${d%/}" ] && continue`) or drop the trailing slash.
 
-Places that are easy to miss: `/private/tmp` (agents point `-derivedDataPath` and browser
-profiles there), `~/Downloads`, `~/Library/Application Support/Caches` (Cursor and Linear
-put their updaters there, not in `~/Library/Caches`), and the Trash. The Trash is
-unreadable from an agent (`Operation not permitted`), so ask the user how full it is.
+Findings the size list won't label for you: `/private/tmp` holds build output when
+agents point `-derivedDataPath` or browser profiles there. Cursor and Linear put their
+updaters in `~/Library/Application Support/Caches`, not `~/Library/Caches`. The Trash
+is unreadable from an agent (`Operation not permitted`), so ask the user how full it is.
 
 ## 4. Check whether the owning app is even installed
 
@@ -111,9 +124,11 @@ distress.**
   node-gyp, pip, Homebrew, and ms-playwright under `~/Library/Caches`. Delete
   `~/.cache` per entry, not wholesale; some tools keep state there.
 - `~/Library/Developer/XCTestDevices`, when nothing is testing (§6). These are parallel
-  testing clones ("Clone 2 of iPhone 16 Pro"), usually 5 GiB each. `xcodebuild` is
-  supposed to delete them, but an interrupted run leaks them. They have reached 70 GiB
-  here. Delete with `xcrun simctl --set testing delete all`.
+  testing clones ("Clone 2 of iPhone 16 Pro"). `xcodebuild` is supposed to delete them,
+  but an interrupted run leaks them. Delete with `xcrun simctl --set testing delete all`.
+  **Don't quote their `du` size as reclaimable.** They are APFS clones that share most
+  of their blocks with the source simulator. Here, three new clones added ~20 GiB to
+  `du` while `df` used rose ~1 GiB. Deleting 57 GiB of them (by `du`) once freed 3.3 GiB.
 - DerivedData folders untouched for a day. Skip anything written in the last hour; that
   is a live build.
 - Build scratch in `/private/tmp` that `lsof +D <dir>` shows nothing holding open.
@@ -126,9 +141,26 @@ cleared in the report so the user can recognize the failure.
 
 **Tier 2+ — anything touching user data, project state, or tooling the user actively
 depends on. Report with sizes and last-used dates, then ask.** Named simulators in
-`CoreSimulator/Devices`, old DeviceSupport versions, `node_modules`/`vendor` in projects,
-old workspaces and branches, `~/conductor/archived-contexts` (closed workspaces' notes and
-PR drafts), container data for installed apps, VM images, Docker.
+`CoreSimulator/Devices`, simulator runtimes, old DeviceSupport versions,
+`node_modules`/`vendor` in projects, old workspaces and branches,
+`~/conductor/archived-contexts` (closed workspaces' notes and PR drafts), container data
+for installed apps, VM images, Docker.
+
+Two tier 2 sources are large enough to have their own scripts. Both only list unless
+told otherwise:
+
+- **Simulator runtimes** (`scripts/simulators.py`): about 8 GiB each. The script shows
+  each runtime's last use and how many devices and test clones depend on it. It reads
+  simctl's own metadata, so it finishes in under a second. A runtime nothing has ever
+  booted is an easy yes. An older iOS runtime may be kept on purpose for testing
+  backward compatibility, so ask. Delete with `xcrun simctl runtime delete <id>`.
+- **Dependencies in idle workspaces** (`scripts/workspace-deps.sh [days]`): `node_modules`
+  and `vendor` in workspaces with no file edited for 7 days (default). This keeps the
+  branch, uncommitted work, and `.context`, and only removes what reinstalls. It skips
+  anything git tracks and the current workspace. After approval, `--delete` re-checks
+  each workspace right before removing it, in case another agent resumed it. The cost
+  is a slower cold start in that workspace. `vendor` in linkfount-tall also needs
+  `auth.json` copied in before `composer install` works, so mention it.
 
 The judgment calls belong to the user: which simulators matter, which branches are dead,
 which project is still live. Give them dates and sizes so the call is cheap to make —
@@ -139,7 +171,7 @@ don't make it for them, and don't hide a tier 2 item inside a tier 1 batch.
 **Test for live simulator work directly, not for Xcode.** `pgrep -l "Xcode|Simulator"`
 always matches, because launchd keeps `CoreSimulatorService` and `SimulatorTrampoline`
 alive with no device running. The check still failed after the user quit Xcode, which
-kept 80+ GiB off-limits. What actually matters:
+kept the whole simulator tree off-limits. What actually matters:
 
 ```zsh
 xcrun simctl list devices booted                 # named simulators in use
@@ -152,22 +184,11 @@ Xcode.app open. Other agents on this machine run `xcodebuild test`, so recheck r
 before the `rm`, not ten minutes earlier.
 
 **Inspect simulators yourself.** `xcrun simctl delete unavailable` often frees nothing,
-because the runtimes backing those devices are still installed. Most devices are ~17 MB
-never-booted stubs; only a handful hold GBs:
+because the runtimes backing those devices are still installed. `scripts/simulators.py`
+lists devices by data size with their last-booted date. Most are ~17 MB never-booted
+stubs; only a handful hold GBs.
 
-```zsh
-SIMS=~/Library/Developer/CoreSimulator/Devices
-for d in $SIMS/*/; do
-  [ -f "$d/device.plist" ] || continue
-  printf '%s\t%s\t%s\t%s\n' \
-    "$(du -sh "$d" | cut -f1)" \
-    "$(/usr/libexec/PlistBuddy -c 'Print :name' "$d/device.plist" 2>/dev/null)" \
-    "$(/usr/libexec/PlistBuddy -c 'Print :runtime' "$d/device.plist" 2>/dev/null | sed 's/.*SimRuntime\.//')" \
-    "$(stat -f '%Sm' -t '%Y-%m-%d' "$d")"
-done | sort -rh
-```
-
-Show the user the large ones with runtime and last-modified date, and let them pick.
+Show the user the large ones with runtime and last-booted date, and let them pick.
 Keep DeviceSupport for the current OS build (`sw_vers`); older builds regenerate on the
 next device connect.
 
@@ -212,10 +233,11 @@ you intended to delete:
 | `/System/Volumes/Data` free | 4.2 Gi | 63 Gi | +58.8 Gi |
 
 **When `df` moves much less than `du` predicted, say so, and name the likely cause.**
-Deleting 57 GiB of `XCTestDevices` once freed only 3.3 GiB. Possible causes:
+The usual causes:
 
-- Test clones are APFS copy-on-write clones of their source simulator. `du` counts the
-  shared blocks, but deleting a clone frees only the blocks it changed.
+- APFS clones. `du` counts shared blocks once per copy, so simulator test clones
+  (§5) look many times larger than what deleting them frees. The survey's negative
+  accounting gap is the same effect.
 - A local snapshot (`tmutil listlocalsnapshots /System/Volumes/Data`) keeps deleted
   blocks allocated until it is removed.
 - Another process filled the space while you deleted.
@@ -226,10 +248,9 @@ Then, in plain terms:
   not an embarrassment to omit.
 - **Any earlier estimate that was wrong** — say it was wrong and by how much.
 - **What you left untouched and why** — the tier 2 list, still awaiting the user's call.
-- **Why it will come back**, if it will. Leaked test clones regrew from 0 to 70 GiB in
-  two weeks here. Name the source and a durable fix, such as `-parallel-testing-enabled
-  NO` for agent test runs, or a cleanup step after them. Without that, the user is back
-  in a week.
+- **Why it will come back**, if it will. Name the source and a durable fix, such as
+  `-parallel-testing-enabled NO` for agent test runs or a cleanup step after them.
+  Without that, the user is back in a week.
 
 Re-check `sysctl vm.swapusage` at the end too: if the complaint was "out of application
 memory," the fix isn't proven until swap has room to grow again.
