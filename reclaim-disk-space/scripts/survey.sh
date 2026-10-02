@@ -14,17 +14,8 @@
 set -uo pipefail
 shopt -s nullglob
 
-section() { printf '\n== %s ==\n' "$1"; }
-
-# du -sk output -> "12.3G<TAB>path", largest first
-human() {
-  sort -rn | awk -F'\t' '{
-    k = $1
-    if (k >= 1048576) printf "%6.1fG\t%s\n", k / 1048576, $2
-    else if (k >= 1024) printf "%6.0fM\t%s\n", k / 1024, $2
-    else printf "%6dK\t%s\n", k, $2
-  }'
-}
+HERE=$(dirname "$0")
+. "$HERE/lib.sh"
 
 section "vitals"
 df -h /System/Volumes/Data | tail -1
@@ -34,15 +25,17 @@ echo "RAM: $(( $(sysctl -n hw.memsize) / 1073741824 )) GiB"
 section "local snapshots (these keep deleted blocks allocated)"
 tmutil listlocalsnapshots /System/Volumes/Data 2>&1 | tail -n +2
 
-section "live Xcode work (blocks simulator and DerivedData deletes; empty = clear)"
+section "live Xcode work (blocks simulator and DerivedData deletes; no booted or xcodebuild lines = clear)"
 if command -v xcrun >/dev/null; then
   xcrun simctl list devices booted 2>/dev/null | grep Booted | sed 's/^ */booted device: /'
   xcrun simctl --set testing list devices booted 2>/dev/null | grep Booted | sed 's/^ */booted test clone: /'
 fi
 pgrep -fl 'xcodebuild|XCTRunner' | cut -c1-160
-for d in ~/Library/Developer/Xcode/DerivedData/*/; do
-  [ -n "$(find "$d" -maxdepth 0 -mmin -60)" ] && echo "DerivedData written in last hour: $(basename "$d")"
-done
+if [ -x ~/.claude/hooks/sim-cap.sh ] && grep -q sim-cap.sh ~/.claude/settings.json 2>/dev/null; then
+  echo "sim-cap hook: installed"
+else
+  echo "sim-cap hook: NOT installed; booted simulators can refill swap (SKILL.md: prevent a repeat)"
+fi
 
 section "known-regenerable cruft"
 for d in ~/Library/Caches/*.ShipIt ~/Library/Caches/*-updater \
@@ -52,6 +45,8 @@ done | human
 clones=(~/Library/Developer/XCTestDevices/*/)
 [ ${#clones[@]} -gt 0 ] && echo "XCTestDevices: ${#clones[@]} test clones (du overstates their reclaimable size; see SKILL.md)"
 [ -n "$(find ~/.npm -user root -print -quit 2>/dev/null)" ] && echo "~/.npm contains root-owned files: rm will fail on them; needs sudo chown"
+
+"$HERE/usual-suspects.sh"
 
 section "sizes (largest 25 of every entry measured)"
 entries=()

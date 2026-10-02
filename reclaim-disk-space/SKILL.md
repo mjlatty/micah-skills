@@ -32,6 +32,17 @@ sets `nobareglobqual`, which disables it, so `*.ShipIt(N)` fails the same way. T
 find ~/Library/Caches -maxdepth 1 -name '*.ShipIt'
 ```
 
+The quiet version of this failure is the dangerous one. A size survey whose glob failed
+printed nothing for `~/Library/Containers`, which read as "empty" while it held 23 GiB.
+So **every "what's big in X" step uses `scripts/sizes.sh <dir> [N]`**, never a
+hand-written `du` over a glob. It lists children with `find`, so zsh options can't
+touch it, and it reports unreadable paths instead of hiding them.
+
+**If a folder you expect to be big measures empty or tiny, re-measure it another way
+before reporting it.** Use `du -skx <dir>` on the folder itself, or `ls -la`. An aborted
+glob, a TCC `Operation not permitted`, and a truly empty folder all look the same in a
+size list.
+
 A quoted tilde doesn't expand either: `rm -rf "~/Library/..."` targets a directory
 literally named `~`. Quote only the part after it: `~/"Library/Application Support"`.
 
@@ -41,17 +52,18 @@ foreground `du` over `~/Library/Developer` has hit a 5-minute timeout before.
 ## 1. Survey everything in one background pass
 
 Run `scripts/survey.sh` from this skill's directory, in the background. It is
-read-only. It prints the vitals, APFS snapshots, live Xcode work, and known cruft. Then
-it measures every top-level entry in `~` and `~/Library`, plus the system locations on
-the data volume (`/Applications`, `/Library`, `/opt`, simulator runtime images). While
-it runs, explain the diagnosis below; don't start probing directories by hand.
+read-only. It prints the vitals, APFS snapshots, live Xcode work, known cruft, and the
+usual large items (§4). Then it measures every top-level entry in `~` and `~/Library`,
+plus the system locations on the data volume (`/Applications`, `/Library`, `/opt`,
+simulator runtime images). While it runs, explain the diagnosis below; don't start
+probing directories by hand.
 
 **Read the accounting line first.** It compares what was measured with `df`'s used total.
 A small gap means the size list is the whole story, and the cleanup can be thorough by
 proof rather than by habit. A large gap means something is hidden: unreadable system
 directories, a local snapshot, or another user's files. Say so; don't report a cleanup
 as complete while tens of GiB are unexplained. A negative gap means APFS clones were
-counted twice (§8).
+counted twice (§11).
 
 ## 2. Separate the symptom from the cause
 
@@ -71,19 +83,21 @@ wrong model and it should be corrected.
 machine several agents build and test in parallel, and free space has dropped from 8 GiB
 to 141 MiB mid-session. If it is falling, the writer matters more than any cache: look
 for the newest large directories (DerivedData, `/private/tmp` build dirs, simulator
-clones) and name the process. A cleanup that doesn't stop the writer only buys an hour.
+clones) and name the process. The writer can also be swap: free space here once fell
+from 23.7 GiB to zero in a day, almost all of it swap driven by booted simulators
+(§10). A cleanup that doesn't stop the writer only buys an hour.
 
 ## 3. Drill top-down, never sideways
 
 Take the largest entry from the survey and descend one level at a time until you reach
-something nameable:
+something nameable, with `scripts/sizes.sh <dir>` at every level:
 
 ```zsh
-find <dir> -mindepth 1 -maxdepth 1 -exec du -skx {} + 2>/dev/null | sort -rn | head -15
+scripts/sizes.sh ~/Library/Containers
 ```
 
-Keep the `-x`. Simulator runtimes are disk images mounted under
-`/Library/Developer/CoreSimulator/Volumes`. Without `-x`, `du` counts their mounted
+It runs `du` with `-x`, and so should any `du` you write. Simulator runtimes are disk
+images mounted under `/Library/Developer/CoreSimulator/Volumes`. Without `-x`, `du` counts their mounted
 contents: 123 GiB for a `/Library/Developer` that holds 23.5 GiB on disk. The images
 themselves live in `/System/Library/AssetsV2`.
 
@@ -99,7 +113,42 @@ agents point `-derivedDataPath` or browser profiles there. Cursor and Linear put
 updaters in `~/Library/Application Support/Caches`, not `~/Library/Caches`. The Trash
 is unreadable from an agent (`Operation not permitted`), so ask the user how full it is.
 
-## 4. Check whether the owning app is even installed
+## 4. Check the usual large items
+
+The top-down survey finds these eventually; a named checklist finds them in one pass.
+`scripts/usual-suspects.sh` checks each one, and the survey runs it. On a repeat run,
+run it alone; it takes about a second.
+
+- **Docker**: `Docker.raw` under `~/Library/Containers/com.docker.docker`. It was the
+  biggest single win here, at 19 GiB. The file is sparse: `ls` showed 60 GiB while it
+  used 19 GiB, so quote the `du` figure. `docker system df` fails when Docker isn't
+  running, so judge staleness by the file's last-modified date. Tier 2. Offer three
+  options:
+  1. Prune unused images (`docker image prune -a`, with Docker running). Volumes, and
+     the databases in them, survive. The VM returns freed blocks to macOS gradually, so
+     recheck `df` after a few minutes before calling it a zero.
+  2. Wipe everything (Docker Desktop → Troubleshoot → Clean / Purge data). Loses volumes.
+  3. Leave it.
+- **Old JetBrains folders**: `<IDE><version>` under `Application Support/JetBrains`,
+  `Caches/JetBrains`, and `Logs/JetBrains`. A folder is old when no installed IDE uses
+  that version. Each IDE names its folder in `Contents/Resources/product-info.json`
+  (`dataDirectoryName`), and the script compares against that. Toolbox installs IDEs in
+  `~/Applications` or its own `Application Support/JetBrains/Toolbox/apps`, not
+  `/Applications`. Check both before calling a version uninstalled. Caches and logs
+  of an uninstalled version are tier 1. Its `Application Support` folder holds settings
+  and plugins, so it's tier 2.
+- **Electron app caches**: `Cache`, `Code Cache`, and `GPUCache` under
+  `Application Support/<App>`. Linear's held 1.9 GiB. Tier 1, but only while the app
+  isn't running, because a running app has them open. The script marks each app
+  RUNNING or closed; recheck with `pgrep -fl <App>` right before the `rm`.
+- **Old Playwright browser builds**: `~/Library/Caches/ms-playwright/<browser>-<build>`.
+  Each upgrade downloads new builds and leaves the old ones. Deleting all but the newest
+  of each browser is tier 1 and avoids re-downloading the build in use. A project pinned
+  to an older Playwright reinstalls its build with `npx playwright install`.
+- **Firefox update downloads**: `~/Library/Caches/Mozilla/updates`. Tier 1.
+- **DerivedData**: tier 1 under the rule in §6, which says when a build is live.
+
+## 5. Check whether the owning app is even installed
 
 Caches under `~/Library/Caches/<Vendor>` and `~/Library/Application Support/<Vendor>`
 are frequently **orphaned from apps that were uninstalled months ago**. That reclassifies
@@ -112,25 +161,31 @@ ls -d /Applications/*.app ~/Applications/*.app   # what's actually installed
 `*.ShipIt` and `*-updater` directories are Squirrel/Electron installer staging leftovers
 — downloaded update payloads. They are **always** safe, installed app or not.
 
-## 5. Tier proposals by reversibility
+## 6. Tier proposals by reversibility
 
-Sort every candidate into a tier. **Only tier 1 executes without asking.**
+Sort every candidate into a tier. **Only tier 1 executes without asking, and only when
+free space is under ~10 GiB or the user asked for a cleanup.** Otherwise, propose tier 1
+with sizes like everything else.
 
-**Tier 1 — regenerable, no user data. Execute immediately when the machine is in
-distress.**
+**Tier 1 — regenerable, no user data.**
 
 - Caches of uninstalled apps, `*.ShipIt` / `*-updater` staging.
 - Package-manager caches: `~/.npm/_cacache`, and CocoaPods, pnpm, go-build, composer,
   node-gyp, pip, Homebrew, and ms-playwright under `~/Library/Caches`. Delete
   `~/.cache` per entry, not wholesale; some tools keep state there.
-- `~/Library/Developer/XCTestDevices`, when nothing is testing (§6). These are parallel
+- The tier 1 items from §4: caches and logs of uninstalled JetBrains versions, Electron
+  caches of closed apps, old Playwright builds, Firefox update downloads.
+- `~/Library/Developer/XCTestDevices`, when nothing is testing (§7). These are parallel
   testing clones ("Clone 2 of iPhone 16 Pro"). `xcodebuild` is supposed to delete them,
   but an interrupted run leaks them. Delete with `xcrun simctl --set testing delete all`.
   **Don't quote their `du` size as reclaimable.** They are APFS clones that share most
   of their blocks with the source simulator. Here, three new clones added ~20 GiB to
-  `du` while `df` used rose ~1 GiB. Deleting 57 GiB of them (by `du`) once freed 3.3 GiB.
+  `du` while `df` used rose ~1 GiB. Deleting 57 GiB of them (by `du`) once freed 3.3 GiB,
+  against a promised ~75 GiB. Propose them as "mostly shared space, real size unknown
+  until deleted", and report what `df` gained.
 - DerivedData folders untouched for a day. Skip anything written in the last hour; that
-  is a live build.
+  is a live build. A build whose DerivedData is deleted mid-run fails, so check
+  `pgrep -fl xcodebuild` right before the `rm`; another agent's build counts.
 - Build scratch in `/private/tmp` that `lsof +D <dir>` shows nothing holding open.
 
 Worst case something re-downloads or rebuilds. But if the disk is still under ~10 GiB
@@ -142,9 +197,9 @@ cleared in the report so the user can recognize the failure.
 **Tier 2+ — anything touching user data, project state, or tooling the user actively
 depends on. Report with sizes and last-used dates, then ask.** Named simulators in
 `CoreSimulator/Devices`, simulator runtimes, old DeviceSupport versions,
-`node_modules`/`vendor` in projects, old workspaces and branches,
+`node_modules`/`vendor` in projects, old Conductor workspaces (§8),
 `~/conductor/archived-contexts` (closed workspaces' notes and PR drafts), container data
-for installed apps, VM images, Docker.
+for installed apps, settings of uninstalled JetBrains versions, VM images, Docker (§4).
 
 Two tier 2 sources are large enough to have their own scripts. Both only list unless
 told otherwise:
@@ -166,7 +221,7 @@ The judgment calls belong to the user: which simulators matter, which branches a
 which project is still live. Give them dates and sizes so the call is cheap to make —
 don't make it for them, and don't hide a tier 2 item inside a tier 1 batch.
 
-## 6. Verify before every delete
+## 7. Verify before every delete
 
 **Test for live simulator work directly, not for Xcode.** `pgrep -l "Xcode|Simulator"`
 always matches, because launchd keeps `CoreSimulatorService` and `SimulatorTrampoline`
@@ -199,20 +254,37 @@ return zero lines:
 git -C <repo> status --porcelain -- node_modules vendor
 ```
 
-**Before removing a workspace, prove its work is safe elsewhere.** Workspaces are git
-worktrees, and the owning repo is not always `~/conductor/repos` (breezyfees lives in
-`~/Code`). Read `<ws>/.git` for the real `gitdir:`. Then check:
+## 8. Conductor workspaces
 
-- `git status --porcelain` is empty.
-- No commits missing from the remote.
-- The branch is merged. PRs here are squash-merged, so `git branch --merged` reports
-  merged branches as unmerged. Ask GitHub instead:
-  `gh pr list --head <branch> --state merged`.
+Run `scripts/workspaces.sh` in the background. It measures every workspace and asks
+GitHub which PRs merged, about 30 seconds here. It sorts the workspaces into groups,
+each with its total size:
 
-Remove with `git worktree remove <path>` from the owning repo, not `rm -rf`, so the
-repo's worktree list stays accurate.
+- **Safe**: the PR for this exact commit merged, nothing is uncommitted, and nothing is
+  unpushed. Only this group is safe to archive.
+- **Empty**: no commits beyond the default branch, no changes, no PR. Usually an
+  abandoned start, so ask.
+- **Merged, but has work since** and **unmerged or in progress**: keep.
+- **Broken**: `.git` points at a repo that no longer exists. Ask.
 
-## 7. Hand the user what only they can do
+PRs here are squash-merged, so `git branch --merged` reports merged branches as
+unmerged. The script asks GitHub instead, with one `gh pr list` per repo. It also marks
+the workspace you are running in.
+
+**Show the group sizes early.** Old workspaces are usually a small win; the safe group
+was 2.9 GiB here. The user should know that before spending time on it. Most of a
+workspace's size is dependencies, and `workspace-deps.sh` (§6) reclaims those without
+archiving anything.
+
+**Archive in the Conductor app; don't delete folders.** The `conductor` CLI only manages
+cloud workspaces. Deleting a workspace folder, or running `git worktree remove`, leaves
+Conductor listing a workspace that no longer exists. Hand the user the safe list to
+archive.
+
+**Leave `conductor.db` alone** (`~/Library/Application Support/com.conductor.app`). It is
+Conductor's state, not a cache.
+
+## 9. Hand the user what only they can do
 
 Some fixes are out of an agent's reach. List them with sizes and stop retrying them:
 
@@ -222,21 +294,45 @@ Some fixes are out of an agent's reach. List them with sizes and stop retrying t
 - **Quit Xcode or stop a test run**, when a live build blocks a large delete.
 - **Install a pending macOS update** (`softwareupdate --list`), if a
   `com.apple.os.update-*` snapshot is holding space.
+- **Archive merged workspaces** in the Conductor app (§8).
 
-## 8. Report honestly
+## 10. Prevent a repeat
 
-Close with a before/after table built from **real `df` output**, not from the sum of what
-you intended to delete:
+Cleaning up doesn't fix a machine that refills. Free space here fell from 23.7 GiB to
+zero in a day, almost all of it swap, driven by booted simulators. Each one holds
+gigabytes of RAM, and with several agents testing at once, swap grows on the boot disk
+until the disk is full.
 
-| | Before | After | Freed |
+- **Check that the simulator-cap hook is installed.** `~/.claude/hooks/sim-cap.sh` is a
+  PreToolUse hook that blocks booting a simulator or starting `xcodebuild test` once two
+  simulators are booted (`CLAUDE_SIM_CAP`). The survey reports whether
+  `~/.claude/settings.json` registers it. If not, tell the user and offer to wire it up.
+- **Simulators named `*-claude` belong to other sessions.** Ask before shutting one
+  down, even to free memory; it may be mid-test in another workspace.
+- **Parallel testing multiplies the count.** Each parallel-testing clone is another
+  booted simulator. Agent test runs should pass `-parallel-testing-enabled NO`.
+
+## 11. Report honestly
+
+Build the report from **real `df` output**, not from the sum of what you intended to
+delete. **Measure `df` right before and right after each delete, and report each step's
+change separately.** Free space moves on its own here: it once rose ~8 GiB between two
+steps with no delete, likely macOS removing swap files or another session finishing.
+A start-to-end total credits that drift to the cleanup.
+
+| Step | Free before | Free after | Change |
 |---|---|---|---|
-| `/System/Volumes/Data` free | 4.2 Gi | 63 Gi | +58.8 Gi |
+| Package caches | 4.2 Gi | 9.0 Gi | +4.8 Gi |
+| `Docker.raw` | 17.1 Gi | 36.0 Gi | +18.9 Gi |
+
+The 8.1 Gi between the first step's "after" and the second's "before" is not yours.
+Say so.
 
 **When `df` moves much less than `du` predicted, say so, and name the likely cause.**
 The usual causes:
 
 - APFS clones. `du` counts shared blocks once per copy, so simulator test clones
-  (§5) look many times larger than what deleting them frees. The survey's negative
+  (§6) look many times larger than what deleting them frees. The survey's negative
   accounting gap is the same effect.
 - A local snapshot (`tmutil listlocalsnapshots /System/Volumes/Data`) keeps deleted
   blocks allocated until it is removed.
@@ -248,13 +344,12 @@ Then, in plain terms:
   not an embarrassment to omit.
 - **Any earlier estimate that was wrong** — say it was wrong and by how much.
 - **What you left untouched and why** — the tier 2 list, still awaiting the user's call.
-- **Why it will come back**, if it will. Name the source and a durable fix, such as
-  `-parallel-testing-enabled NO` for agent test runs or a cleanup step after them.
-  Without that, the user is back in a week.
+- **Why it will come back**, if it will. Name the source and a durable fix from §10,
+  or a cleanup step after agent test runs. Without that, the user is back in a week.
 
 Re-check `sysctl vm.swapusage` at the end too: if the complaint was "out of application
 memory," the fix isn't proven until swap has room to grow again.
 
 **On a repeat run in the same session**, don't redo the whole survey. Recheck `df`, the
 earlier big entries, and the tier 1 locations that regrow (package caches, test clones,
-`/private/tmp`). Run the full survey only if that doesn't account for the loss.
+`/private/tmp`), and rerun `scripts/usual-suspects.sh`. Run the full survey only if that doesn't account for the loss.
