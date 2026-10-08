@@ -146,6 +146,14 @@ run it alone; it takes about a second.
   of each browser is tier 1 and avoids re-downloading the build in use. A project pinned
   to an older Playwright reinstalls its build with `npx playwright install`.
 - **Firefox update downloads**: `~/Library/Caches/Mozilla/updates`. Tier 1.
+- **Disk images** (`.dmg`) in `~/Downloads` and `~/Desktop`. Here, 17 installers
+  totaled about 3 GiB. An image is only the installer, so once its app is in
+  `/Applications` or `~/Applications`, it is tier 1. Match on the `.app` inside the
+  image, not the file name: `googlechrome.dmg` holds `Google Chrome.app`.
+  `scripts/dmgs.sh` mounts each image read-only, compares its `.app` against what's
+  installed, and detaches. It takes about 40 seconds for 17 images, so the survey only
+  counts them. An image whose app isn't installed is tier 2. So is one with only an
+  `Install X.app` stub inside.
 - **DerivedData**: tier 1 under the rule in §6, which says when a build is live.
 
 ## 5. Check whether the owning app is even installed
@@ -174,7 +182,8 @@ with sizes like everything else.
   node-gyp, pip, Homebrew, and ms-playwright under `~/Library/Caches`. Delete
   `~/.cache` per entry, not wholesale; some tools keep state there.
 - The tier 1 items from §4: caches and logs of uninstalled JetBrains versions, Electron
-  caches of closed apps, old Playwright builds, Firefox update downloads.
+  caches of closed apps, old Playwright builds, Firefox update downloads, and `.dmg`
+  installers whose app is installed.
 - `~/Library/Developer/XCTestDevices`, when nothing is testing (§7). These are parallel
   testing clones ("Clone 2 of iPhone 16 Pro"). `xcodebuild` is supposed to delete them,
   but an interrupted run leaks them. Delete with `xcrun simctl --set testing delete all`.

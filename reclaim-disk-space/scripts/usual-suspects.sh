@@ -62,6 +62,13 @@ done | sort -t$'\t' -k1,1 -k2,2rn | awk -F'\t' 'seen[$1]++ { print $3 }' |
 section "Firefox update downloads"
 [ -d ~/Library/Caches/Mozilla/updates ] && du -skx ~/Library/Caches/Mozilla/updates | human
 
+section "Disk images in Downloads and Desktop (dmgs.sh says which hold an installed app)"
+dmgs=(~/Downloads/*.dmg ~/Desktop/*.dmg)
+if [ ${#dmgs[@]} -gt 0 ]; then
+  kb=$(du -kc "${dmgs[@]}" | tail -1 | cut -f1)
+  echo "${#dmgs[@]} .dmg files, $(gib "$kb")"
+fi
+
 section "DerivedData (deleting a folder mid-build fails that build)"
 [ -d ~/Library/Developer/Xcode/DerivedData ] && du -skx ~/Library/Developer/Xcode/DerivedData | human
 for d in ~/Library/Developer/Xcode/DerivedData/*/; do
