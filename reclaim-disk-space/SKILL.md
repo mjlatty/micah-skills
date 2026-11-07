@@ -146,14 +146,25 @@ run it alone; it takes about a second.
   of each browser is tier 1 and avoids re-downloading the build in use. A project pinned
   to an older Playwright reinstalls its build with `npx playwright install`.
 - **Firefox update downloads**: `~/Library/Caches/Mozilla/updates`. Tier 1.
-- **Disk images** (`.dmg`) in `~/Downloads` and `~/Desktop`. Here, 17 installers
-  totaled about 3 GiB. An image is only the installer, so once its app is in
-  `/Applications` or `~/Applications`, it is tier 1. Match on the `.app` inside the
-  image, not the file name: `googlechrome.dmg` holds `Google Chrome.app`.
-  `scripts/dmgs.sh` mounts each image read-only, compares its `.app` against what's
-  installed, and detaches. It takes about 40 seconds for 17 images, so the survey only
-  counts them. An image whose app isn't installed is tier 2. So is one with only an
-  `Install X.app` stub inside.
+- **Installers whose job is done.** An installer isn't the thing it installs, so once
+  that thing is on the machine, the installer is tier 1. Here, 17 `.dmg` files in
+  `~/Downloads` totaled about 3 GiB. The rarer kinds are bigger: an `Install macOS`
+  app is ~13 GiB, an Xcode `.xip` 10 GiB or more, an `.ipsw` ~7 GiB.
+  `scripts/installers.sh` checks each one and marks it safe or ask:
+  - `.dmg` and `.zip`: safe when the `.app` inside is in `/Applications` or
+    `~/Applications`. It matches on the app inside, not the file name:
+    `googlechrome.dmg` holds `Google Chrome.app`. A stub like `Install Spotify.app` or
+    `1Password Installer.app` counts when the app it downloads is installed. Zips with
+    no `.app` inside are documents and aren't listed.
+  - `Install macOS <name>.app`: safe when that version or a newer one is running.
+  - `Xcode_<version>.xip`: safe when an Xcode of that exact version is installed. Betas
+    share a version number with the final build, so they're always ask.
+  - `.ipsw` firmware: always safe; Apple serves current firmware on demand.
+  - `.pkg`: safe only when every package it holds is in the installer receipts
+    (`pkgutil --pkgs`). Nothing else maps a `.pkg` to what it installed.
+
+  Mounting each `.dmg` takes about 40 seconds for 17 images, so the survey only counts
+  installers. Anything marked ask is tier 2.
 - **DerivedData**: tier 1 under the rule in §6, which says when a build is live.
 
 ## 5. Check whether the owning app is even installed
@@ -182,8 +193,8 @@ with sizes like everything else.
   node-gyp, pip, Homebrew, and ms-playwright under `~/Library/Caches`. Delete
   `~/.cache` per entry, not wholesale; some tools keep state there.
 - The tier 1 items from §4: caches and logs of uninstalled JetBrains versions, Electron
-  caches of closed apps, old Playwright builds, Firefox update downloads, and `.dmg`
-  installers whose app is installed.
+  caches of closed apps, old Playwright builds, Firefox update downloads, and installers
+  that have done their job.
 - `~/Library/Developer/XCTestDevices`, when nothing is testing (§7). These are parallel
   testing clones ("Clone 2 of iPhone 16 Pro"). `xcodebuild` is supposed to delete them,
   but an interrupted run leaks them. Delete with `xcrun simctl --set testing delete all`.

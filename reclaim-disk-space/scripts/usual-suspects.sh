@@ -62,11 +62,12 @@ done | sort -t$'\t' -k1,1 -k2,2rn | awk -F'\t' 'seen[$1]++ { print $3 }' |
 section "Firefox update downloads"
 [ -d ~/Library/Caches/Mozilla/updates ] && du -skx ~/Library/Caches/Mozilla/updates | human
 
-section "Disk images in Downloads and Desktop (dmgs.sh says which hold an installed app)"
-dmgs=(~/Downloads/*.dmg ~/Desktop/*.dmg)
-if [ ${#dmgs[@]} -gt 0 ]; then
-  kb=$(du -kc "${dmgs[@]}" | tail -1 | cut -f1)
-  echo "${#dmgs[@]} .dmg files, $(gib "$kb")"
+section "Installers (installers.sh says which have done their job)"
+inst=(~/Downloads/*.{dmg,xip,ipsw,pkg} ~/Desktop/*.{dmg,xip,ipsw,pkg}
+      /Applications/Install\ macOS*.app ~/Applications/Install\ macOS*.app)
+if [ ${#inst[@]} -gt 0 ]; then
+  kb=$(du -skxc "${inst[@]}" | tail -1 | cut -f1)
+  echo "${#inst[@]} installers, $(gib "$kb") (app zips not counted)"
 fi
 
 section "DerivedData (deleting a folder mid-build fails that build)"
