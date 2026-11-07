@@ -1,6 +1,6 @@
 ---
 name: variant-lab
-description: Use when the user wants to see several design or copy alternatives for a page's sections and choose between them — "try a few variants of each section", "give me options for the hero", "A/B some versions of the landing page", "show me alternatives and let me pick", "more like the ones I picked". Builds a local-only lab page that renders the real page with every section swappable from a picker, fills it with deliberately different variants (in parallel when there are many), screenshots them, then runs a second round in the direction the user's picks reveal and promotes the winners.
+description: Use when the user wants to see several design or copy alternatives for a page's sections and choose between them — "try a few variants of each section", "give me options for the hero", "A/B some versions of the landing page", "show me alternatives and let me pick", "more like the ones I picked". Builds a local-only lab page that renders the real page with every section swappable from a picker, fills it with deliberately different variants (in parallel when there are many), screenshots them, then runs further rounds in the direction the user's picks, mixes and notes reveal, pruning what lost, and promotes the winners.
 ---
 
 # Variant lab
@@ -43,8 +43,12 @@ query string: `/landing-lab?hero=b&how=c`. Ingredients:
   need.
 - **A picker** fixed in a corner: one row per section, one button per letter, each a link to the
   same URL with only that section's pick changed (the other picks are preserved), plus a
-  `Picks: hero=B how=C …` line the user can copy back to you. Make it collapsible. Size it so every
-  letter fits. Pruning between rounds keeps that to about five letters per section.
+  `Picks: hero=B how=C …` line the user can copy back to you. Each row also opens a panel with a
+  checkbox per letter and a note field. That's for when the answer is a mix of two variants, or a
+  pick with a change: the line then reads `hero=B+D`, the notes are listed under it, and a Copy
+  button copies both. Ticked letters override the letter on screen, so browsing doesn't change the
+  answer. Make the picker collapsible. Size it so every letter fits. Pruning between rounds keeps
+  that to about five letters per section.
 - **A label on every section** (`hero · B — Split: claim left, card right`) so any screenshot says
   what it shows.
 - **Guard rails.** Register the route only in the local environment, mark the page `noindex`, and
@@ -95,29 +99,37 @@ at desktop *and* phone width, and someone has looked at those screenshots and fi
   analytics event name that doesn't exist yet. Check the strongest-looking variants hardest. A
   convincing mockup of a feature you don't have is the most likely way for this process to put
   something false on the page.
-- Ask for picks in the picker's own format (`hero=B how=C …`).
+- Ask for picks in the picker's own format (`hero=B how=C …`): use Copy picks, tick more than one
+  letter to mix them, and leave a note for anything a letter can't say.
 
-## 5. Round two: converge on their taste
+## 5. Later rounds: converge on their taste
 
-When picks come back, read them as evidence, losers included:
+When picks come back, read them as evidence, losers included. A note outranks your inference, and
+a mix (`hero=B+D`, "B's layout, D's headline") is the most specific evidence of all.
 
 1. **Write the inferred taste down** in a sentence or two, naming both what won and what lost
    ("concrete artifacts with real numbers, problem-first, split layouts, numbered pins; passed on
    slogans, tile grids and centered statements"). Say it to the user. That sentence is the brief
    for every worker, and it lets the user correct the reading before more is built on it.
-2. **Prune what lost.** Once the taste sentence records the losers, delete each unpicked variant:
-   its file and its registry entry. Keep A, because it's the live partial, and keep the pick. Keep a
-   shared helper only if a surviving variant still includes it. Losers left in the picker crowd it
+2. **Prune what lost.** Do this at the start of every round after the first. Once the taste
+   sentence records the losers, delete each variant that wasn't picked or mixed in: its file and
+   its registry entry. Keep A, because it's the live partial, and keep every letter in the pick,
+   since the letters of a mix are the reference for the blend. Keep a shared helper only if a
+   surviving variant still includes it. Losers left in the picker crowd it
    and pull new variants back toward ideas the user already turned down. Their screenshots stay in
    `.context/` as the record.
 3. **Make their picks the lab's default**, so the bare URL opens on their current page and each new
-   letter is compared against their choice, not against A.
+   letter is compared against their choice, not against A. For a mix, use the letter the note
+   treats as the base, or else the first one.
 4. **Add D/E/F to every section**, including sections where they kept A. There, stay close to A and
    push only on the traits they showed elsewhere. Each new variant should be a distinct take
    *within* the inferred direction, specified up front (one line each) so the three don't converge.
+   Where they mixed, D is the blend the note describes, and E and F try other ways of combining
+   the same letters.
    Don't reuse a pruned letter. A letter in a screenshot or an old `Picks:` line should always mean
    the same variant.
-5. Present it the same way as round one, then prune and repeat until every section has a pick.
+5. Present it the same way as round one, then prune and repeat until every section has a pick. A
+   mix isn't a final pick. It means that section gets another round.
 
 ## 6. Promote
 
@@ -156,6 +168,9 @@ Once every section has a pick:
   The product can actually do what the mock shows it doing. Numbers inside one artifact agree with
   each other (an offer pegged to last year shouldn't be priced on this year's amount without saying
   so).
+- **Old notes after a round.** The picker keys its mixes and notes to each section's letters, so
+  pruning and adding letters clears them. If a round changes only labels, use "Clear mixes and
+  notes" before the user starts picking.
 - **Defaults hide comparisons.** Once the default is the user's picks, `?section=a` is the only way
   to see the live version. Mention that once.
 

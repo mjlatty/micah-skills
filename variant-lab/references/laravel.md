@@ -112,33 +112,106 @@ any conditional sections conditional (here, commercial renders only with payer d
 
 Add `<meta name="robots" content="noindex, nofollow">` to the head slot.
 
-The picker, fixed bottom-right. Each letter links to the same page with one pick changed:
+The picker, fixed bottom-right. Each letter links to the same page with one pick changed. Under each
+row, a hidden panel holds a checkbox per letter and a note field, so the user can answer "B, with
+D's headline". With no boxes ticked, a section's pick is the letter on screen. Once any are ticked,
+the ticked letters are the pick, whatever is on screen, so looking at another letter never changes
+the answer. Those live in `localStorage`, because every letter click is a full page load, and the
+storage key includes each section's letters, so pruning or adding letters starts a round with empty
+notes:
 
 ```blade
-<div id="landing-lab-picker" class="fixed bottom-4 right-4 z-50 w-[30rem] max-w-[calc(100vw-2rem)] rounded-xl border bg-white/95 p-3 text-xs shadow-2xl backdrop-blur">
+<div id="landing-lab-picker" class="fixed bottom-4 right-4 z-50 w-[32rem] max-w-[calc(100vw-2rem)] rounded-xl border bg-white/95 p-3 text-xs shadow-2xl backdrop-blur">
     <div class="flex items-center justify-between">
         <p class="font-semibold">Landing lab</p>
         <button type="button" onclick="var b = document.getElementById('landing-lab-rows'); b.hidden = !b.hidden; localStorage.setItem('landingLabCollapsed', b.hidden ? '1' : '');">Hide / show</button>
     </div>
     <div id="landing-lab-rows" class="mt-2 space-y-1.5">
         @foreach ($sections as $section => $variants)
-            <div class="flex items-center gap-2">
-                <a href="#lab-{{ $section }}" class="w-20 shrink-0 font-mono">{{ $section }}</a>
-                <div class="flex gap-1">
-                    @foreach ($variants as $letter => [$view, $label])
-                        <a href="{{ $hrefWith($section, $letter) }}#lab-{{ $section }}" title="{{ $label }}" @class([
-                            'grid size-7 place-items-center rounded-md border font-mono font-semibold uppercase',
-                            'border-fuchsia-600 bg-fuchsia-600 text-white' => $picks[$section] === $letter,
-                        ])>{{ $letter }}</a>
-                    @endforeach
+            <div data-lab-section="{{ $section }}" data-lab-pick="{{ $picks[$section] }}" data-lab-letters="{{ implode('', array_keys($variants)) }}">
+                <div class="flex items-center gap-2">
+                    <a href="#lab-{{ $section }}" class="w-20 shrink-0 font-mono">{{ $section }}</a>
+                    <div class="flex gap-1">
+                        @foreach ($variants as $letter => [$view, $label])
+                            <a href="{{ $hrefWith($section, $letter) }}#lab-{{ $section }}" title="{{ $label }}" @class([
+                                'grid size-7 place-items-center rounded-md border font-mono font-semibold uppercase',
+                                'border-fuchsia-600 bg-fuchsia-600 text-white' => $picks[$section] === $letter,
+                            ])>{{ $letter }}</a>
+                        @endforeach
+                    </div>
+                    <button type="button" data-lab-toggle class="shrink-0 rounded-md border px-1.5 py-1 text-zinc-500" title="Mix in other variants or leave a note">+ mix / note</button>
+                    <span class="min-w-0 truncate text-zinc-500">{{ $variants[$picks[$section]][1] }}</span>
                 </div>
-                <span class="min-w-0 truncate text-zinc-500">{{ $variants[$picks[$section]][1] }}</span>
+                <div data-lab-extra hidden class="mt-1 space-y-1 pl-22">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-zinc-500">Take from</span>
+                        @foreach ($variants as $letter => [$view, $label])
+                            <label class="flex items-center gap-1 font-mono uppercase" title="{{ $label }}"><input type="checkbox" value="{{ $letter }}"> {{ $letter }}</label>
+                        @endforeach
+                    </div>
+                    <input type="text" data-lab-note class="w-full rounded border px-2 py-1" placeholder="What to take from each, or what to change">
+                </div>
             </div>
         @endforeach
-        <p class="pt-1 font-mono text-[11px] text-zinc-500">Picks: {{ collect($picks)->map(fn ($l, $s) => $s.'='.strtoupper($l))->implode(' ') }}</p>
+        <pre id="landing-lab-picks" class="whitespace-pre-wrap pt-1 font-mono text-[11px] text-zinc-500"></pre>
+        <div class="flex gap-2">
+            <button type="button" id="landing-lab-copy" class="rounded-md border px-2 py-1 font-medium">Copy picks</button>
+            <button type="button" id="landing-lab-clear" class="rounded-md px-2 py-1 text-zinc-500">Clear mixes and notes</button>
+        </div>
     </div>
 </div>
-<script>if (localStorage.getItem('landingLabCollapsed')) document.getElementById('landing-lab-rows').hidden = true;</script>
+<script>
+(() => {
+    const rows = [...document.querySelectorAll('[data-lab-section]')];
+    const key = 'landingLab:' + location.pathname + ':' + rows.map((r) => r.dataset.labSection + '=' + r.dataset.labLetters).join(',');
+    const saved = JSON.parse(localStorage.getItem(key) || '{}');
+    const out = document.getElementById('landing-lab-picks');
+
+    const render = () => {
+        const picks = [], notes = [];
+        for (const row of rows) {
+            const section = row.dataset.labSection, state = saved[section];
+            picks.push(section + '=' + (state.mix.length ? state.mix : [row.dataset.labPick]).join('+').toUpperCase());
+            if (state.note.trim()) notes.push(section + ': ' + state.note.trim());
+        }
+        out.textContent = 'Picks: ' + picks.join(' ') + (notes.length ? '\nNotes:\n' + notes.join('\n') : '');
+        localStorage.setItem(key, JSON.stringify(saved));
+    };
+
+    for (const row of rows) {
+        const section = row.dataset.labSection;
+        const boxes = [...row.querySelectorAll('input[type=checkbox]')];
+        const note = row.querySelector('[data-lab-note]'), extra = row.querySelector('[data-lab-extra]');
+        const state = (saved[section] ??= { mix: [], note: '' });
+
+        boxes.forEach((b) => {
+            b.checked = state.mix.includes(b.value);
+            b.addEventListener('change', () => {
+                state.mix = boxes.filter((x) => x.checked).map((x) => x.value);
+                render();
+            });
+        });
+        note.value = state.note;
+        note.addEventListener('input', () => { state.note = note.value; render(); });
+        extra.hidden = !state.mix.length && !state.note;
+        row.querySelector('[data-lab-toggle]').addEventListener('click', () => { extra.hidden = !extra.hidden; });
+    }
+
+    document.getElementById('landing-lab-copy').addEventListener('click', () => navigator.clipboard.writeText(out.textContent));
+    document.getElementById('landing-lab-clear').addEventListener('click', () => { localStorage.removeItem(key); location.reload(); });
+    if (localStorage.getItem('landingLabCollapsed')) document.getElementById('landing-lab-rows').hidden = true;
+    render();
+})();
+</script>
+```
+
+The copied text reads like this, and it's what the user pastes back:
+
+```
+Picks: hero=B+D how=C proof=A
+Notes:
+hero: B's split layout, D's headline
+proof: shorter, drop the third logo
 ```
 
 ## Variant files
