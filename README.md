@@ -18,6 +18,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `seo-improvement` | Audits a site for rank, clickthrough, and engagement, and applies the low-risk fixes |
 | `skill-scout` | Records or audits friction, skill failures, and token waste, then harvests evidence into fixes |
 | `technical-blog` | Technical posts written from the conversation that produced the work |
+| `variant-lab` | A local-only lab page for comparing alternative versions of a page's sections on the real page, with rounds that converge on what you pick |
 
 `icp-definition` is the hub: it writes an `icps/` folder into a project, and `copywriting`,
 `seo-improvement`, `monetization-strategy`, `product-changelog`, and `technical-blog` read it for
