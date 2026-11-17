@@ -4,7 +4,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 
 | Skill | What it's for |
 |---|---|
-| `code-tour` | Walks you through a PR or feature stop by stop, judging each part against the language idiom and the repo's own conventions |
+| `brief-me` | Briefing on a PR before you review it, even in an unfamiliar area: a primer on the area, an architecture diagram, a worked example, ranked danger zones, convention drift, and where to spend review time |
 | `copywriting` | Marketing and landing-page copy that sells one idea to one audience |
 | `icp-definition` | Ranked, evidence-based customer profiles, written to the project as an `icps/` folder |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
@@ -33,7 +33,7 @@ collect evidence as it appears.
 
 ```sh
 ./install.sh                 # every skill into every detected harness
-./install.sh code-tour       # just one
+./install.sh brief-me        # just one
 ./install.sh --status        # what's installed where
 ./install.sh --uninstall     # remove what this repo owns
 ```
