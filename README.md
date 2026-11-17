@@ -17,6 +17,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `run-laravel-valet` | Cold-starts a Laravel app over HTTPS locally and verifies it serves real pages |
 | `seo-improvement` | Audits a site for rank, clickthrough, and engagement, and applies the low-risk fixes |
 | `skill-scout` | Records or audits friction, skill failures, and token waste, then harvests evidence into fixes |
+| `teach-me` | Teaches one concept from your own repo's good and bad examples, quizzes you, checks version-specific facts, and logs what you've learned |
 | `technical-blog` | Technical posts written from the conversation that produced the work |
 | `variant-lab` | A local-only lab page for comparing alternative versions of a page's sections on the real page, with rounds that converge on what you pick |
 
