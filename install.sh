@@ -7,7 +7,7 @@
 # each harness's skills folder.
 #
 #   ./install.sh                    install every skill into every detected harness
-#   ./install.sh code-tour          install just these skills
+#   ./install.sh brief-me           install just these skills
 #   ./install.sh --status           show what is installed where
 #   ./install.sh --copy             copy instead of symlink
 #   ./install.sh --uninstall        remove skills this repo owns
