@@ -7,6 +7,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `brief-me` | Briefing on a PR before you review it, even in an unfamiliar area: a primer on the area, an architecture diagram, a worked example, ranked danger zones, convention drift, and where to spend review time |
 | `copywriting` | Marketing and landing-page copy that sells one idea to one audience |
 | `icp-definition` | Ranked, evidence-based customer profiles, written to the project as an `icps/` folder |
+| `linked-prs` | Remembers the PRs a workspace opened, so a request about "the linked PRs" reaches every one of them, not just the checked-out branch's PR |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
 | `post-deploy-checklist` | Captures manual post-deploy steps into a durable file that `pr-description` renders into the PR body |
 | `pr-description` | Concise PR bodies explaining why the change is needed and any surprising implementation choices |
