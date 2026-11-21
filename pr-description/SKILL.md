@@ -45,6 +45,6 @@ Before finishing, ask of each sentence: does this explain why the PR is needed, 
 
 ## Deliver
 
-For a description-only request, return Markdown ready to paste. For a request to open or update a PR, prepare the body and complete the authorized action without adding a confirmation step. Pass multiline bodies through `--body-file` or a structured tool argument so shell quoting cannot corrupt them.
+For a description-only request, return Markdown ready to paste. For a request to open or update a PR, prepare the body and complete the authorized action without adding a confirmation step. Pass multiline bodies through `--body-file` or a structured tool argument so shell quoting cannot corrupt them. After opening a PR, if this workspace has already opened another one, record both with `linked-prs`.
 
 Keep the body in the author's voice, with no AI attribution or assistant commentary. Exclude secrets and private data.
