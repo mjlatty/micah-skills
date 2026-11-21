@@ -2,17 +2,35 @@
 
 ## Ordinary change
 
-Suppose three callers have different retry policies, which amplified an upstream outage. The PR consolidates retries in the transport. One caller still needs a separate retry loop for errors returned in successful HTTP responses.
+Suppose three callers of the payments provider have different retry policies, which amplified an upstream outage. The PR consolidates retries in the transport. One caller still needs a separate retry loop for errors returned in successful HTTP responses.
 
 ### Useful description
 
 ```markdown
-Inconsistent retry policies amplified the last upstream outage. This gives callers a shared backoff policy so retries ease pressure while the upstream recovers.
+Retries move into the shared HTTP transport so every call to the payments provider backs off the same way. Inconsistent per-caller retries amplified the last provider outage (#412).
 
-`WebhookDispatcher` intentionally keeps its outer loop: it handles business errors returned as HTTP 200, which transport retries cannot detect.
+### 🏢 Business context
+
+Checkout, invoice export, and webhooks all call the payments provider. During the outage, one caller's tight retry loop tripped the provider's rate limit and blocked checkout for every customer for 20 minutes.
+
+### 🧭 Architecture and concepts
+
+`OrderSubmitter | InvoiceExporter | WebhookDispatcher → HttpTransport::send() → Backoff`
+
+- **Retry ownership.** Callers no longer retry transport errors; `HttpTransport` does, up to `retry_max_attempts` (`config/http.php:12`).
+- **Errors inside a 200.** The provider reports some business failures in a successful response body, which the transport can't see (`WebhookDispatcher.php:58`).
+
+### ⚖️ Tradeoffs
+
+- One policy for all callers instead of per-caller tuning. Nothing needs different limits today, and the config key leaves room if something does.
+- `WebhookDispatcher` keeps its outer loop for 200-with-error responses. It looks like an unfinished refactor but isn't.
+
+### 🚨 Risks
+
+🟡 **low · ops** `InvoiceExporter.php:31`: the export's retry cap drops from 10 to 5, so a long provider blip now fails the batch sooner. Failed batches requeue on the next nightly run.
 ```
 
-The first paragraph gives the reason and intended outcome. The second explains the one detail likely to look like an incomplete refactor. That's enough.
+The opening gives the change and the reason. Business context says why a reviewer should care. The concepts are the two things needed to judge the diff, and the tradeoffs explain the choice and the leftover loop that would otherwise draw a review comment. The one risk is concrete and says what limits the damage.
 
 ### Unnecessary expansion
 
@@ -33,7 +51,7 @@ Retries now live in the transport layer. OrderSubmitter, InvoiceExporter, and We
 - Caller tests pass.
 ```
 
-This gives the reviewer an implementation tour they can get from the code. It omits both the outage that motivated the work and the reason for the surviving loop. Routine test results don't need their own section unless the repo or user requires one.
+This tours the implementation the reviewer can read in the code. It omits the outage that motivated the work, the reason for the surviving loop, and the lowered export cap.
 
 ## Simple change
 
@@ -41,4 +59,4 @@ This gives the reviewer an implementation tour they can get from the code. It om
 Long project names hid the delete action on narrow screens. Keep it reachable without horizontal scrolling.
 ```
 
-No implementation notes are needed when the code is straightforward.
+No sections are needed when the change is small and carries no real risk.
