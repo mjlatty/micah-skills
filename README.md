@@ -9,7 +9,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `icp-definition` | Ranked, evidence-based customer profiles, written to the project as an `icps/` folder |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
 | `post-deploy-checklist` | Captures manual post-deploy steps into a durable file that `pr-description` renders into the PR body |
-| `pr-description` | Concise PR bodies explaining why the change is needed and any surprising implementation choices |
+| `pr-description` | Skimmable PR bodies covering why the change exists, the business context and concepts behind it, its tradeoffs, and its risks |
 | `product-changelog` | User-facing feature announcements from a branch |
 | `prose-style` | Editing pass that tightens prose without flattening its voice |
 | `reclaim-disk-space` | Traces a full disk or "out of application memory" to its real cause, then clears only what regenerates |
