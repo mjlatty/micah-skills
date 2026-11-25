@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""Back up what skills learn to the `skill-data` branch of this repo.
+
+    skill-data status                 what each skill has, and whether a push is due
+    skill-data commit [skill ...]     snapshot changed data onto the local skill-data branch
+    skill-data sync [skill ...]       commit, then push if the last push is a week old or more
+    skill-data push [skill ...]       commit, then push now
+    skill-data restore [skill ...]    write back any file that's missing locally (--force: overwrite)
+    skill-data show                   print what would be committed, scrubbed (nothing is written)
+
+With no skill named, every skill below is included. Add --quiet to print only errors.
+
+Skills keep their data outside every repo, so it survives deleted worktrees and is shared by every
+harness. This copies it into the skills repo so it survives the machine too. Snapshots go on their own
+branch, built with git plumbing: no checkout's working tree, index or current branch is touched, and
+master's history stays about the skills themselves.
+
+Every snapshot is scrubbed first, because this repo is public: the home directory becomes `~`, and
+email addresses and anything shaped like a secret are redacted. The local files are never modified.
+"""
+from __future__ import annotations
+
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+BRANCH = "skill-data"
+REMOTE = "origin"
+DUE_SECONDS = 7 * 24 * 3600
+ROOT = Path(os.environ.get("SKILL_DATA_REPO") or Path(__file__).resolve().parent.parent)
+HOME = Path.home()
+DATA = Path(os.environ.get("XDG_DATA_HOME", HOME / ".local" / "share")).expanduser()
+CLAUDE = Path(os.environ.get("CLAUDE_CONFIG_DIR", HOME / ".claude")).expanduser()
+
+
+def sources() -> dict[str, list[tuple[str, Path]]]:
+    """skill => [(path in the branch, local path)]. A local path may be a directory."""
+    scout = Path(os.environ["SKILL_SCOUT_LOG"]).expanduser() if os.environ.get("SKILL_SCOUT_LOG") else (
+        Path(os.environ["SKILL_SCOUT_HOME"]).expanduser() / "skill-ideas.md"
+        if os.environ.get("SKILL_SCOUT_HOME") else CLAUDE / "skill-ideas.md")
+    return {
+        "variant-lab": [("variant-lab", DATA / "variant-lab")],
+        "teach-me": [("teach-me", DATA / "teach-me")],
+        "skill-scout": [
+            ("skill-scout/skill-ideas.md", scout),
+            ("skill-scout/skill-ideas-archive.md", scout.with_name("skill-ideas-archive.md")),
+        ],
+    }
+
+
+SCRUB = (
+    (re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"), "[email]"),
+    (re.compile(r"(?i)\b(api[_-]?key|token|secret|password|passwd)\s*[:=]\s*[^\s,;`'\"]+"), r"\1=[REDACTED]"),
+    (re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/-]+"), "Bearer [REDACTED]"),
+    (re.compile(r"\b(sk|pk|rk)_(live|test)_[A-Za-z0-9]{8,}"), "[REDACTED]"),
+    (re.compile(r"\b(ghp|gho|ghs|github_pat|xox[abp])_[A-Za-z0-9_]{10,}"), "[REDACTED]"),
+    (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.DOTALL), "[REDACTED PRIVATE KEY]"),
+)
+
+
+def scrub(text: str) -> str:
+    text = text.replace(str(HOME), "~")
+    for pattern, repl in SCRUB:
+        text = pattern.sub(repl, text)
+    return text
+
+
+QUIET = False
+
+
+def say(msg: str) -> None:
+    if not QUIET:
+        print(msg)
+
+
+def git(*args: str, env: dict | None = None, check: bool = True, input: bytes | None = None) -> str:
+    res = subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, input=input,
+                         env={**os.environ, **(env or {})})
+    if check and res.returncode != 0:
+        raise RuntimeError(f"git {' '.join(args)}: {res.stderr.decode().strip()}")
+    return res.stdout.decode().strip()
+
+
+def ref(name: str) -> str | None:
+    out = git("rev-parse", "-q", "--verify", f"{name}^{{commit}}", check=False)
+    return out or None
+
+
+def files_for(skills: list[str]) -> dict[str, bytes]:
+    """Branch path => scrubbed content, for every local file of the given skills."""
+    out: dict[str, bytes] = {}
+    for skill in skills:
+        for dest, local in sources()[skill]:
+            if local.is_file():
+                pairs = [(dest, local)]
+            elif local.is_dir():
+                pairs = [(f"{dest}/{p.relative_to(local).as_posix()}", p) for p in sorted(local.rglob("*"))
+                         if p.is_file() and ".git" not in p.relative_to(local).parts and p.name != ".DS_Store"]
+            else:
+                pairs = []
+            for path, p in pairs:
+                raw = p.read_bytes()
+                try:
+                    out[path] = scrub(raw.decode("utf-8")).encode("utf-8")
+                except UnicodeDecodeError:
+                    out[path] = raw
+    return out
+
+
+def fetch() -> None:
+    if git("remote", check=False).split().count(REMOTE):
+        git("fetch", "-q", REMOTE, f"+refs/heads/{BRANCH}:refs/remotes/{REMOTE}/{BRANCH}", check=False)
+
+
+def is_ancestor(a: str, b: str) -> bool:
+    return subprocess.run(["git", "-C", str(ROOT), "merge-base", "--is-ancestor", a, b]).returncode == 0
+
+
+def catch_up() -> str | None:
+    """Fast-forward the local branch to the remote's when it's behind (another machine pushed)."""
+    local, remote = ref(f"refs/heads/{BRANCH}"), ref(f"refs/remotes/{REMOTE}/{BRANCH}")
+    if remote and remote != local and (not local or is_ancestor(local, remote)):
+        git("update-ref", f"refs/heads/{BRANCH}", remote, *([local] if local else []))
+        return remote
+    return local
+
+
+def build_tree(skills: list[str], parent: str | None) -> str:
+    """The parent's tree with these skills' paths replaced by their current, scrubbed data."""
+    files = files_for(skills)
+    with tempfile.TemporaryDirectory() as tmp:
+        env = {"GIT_INDEX_FILE": str(Path(tmp) / "index")}
+        git("read-tree", *([parent] if parent else ["--empty"]), env=env)
+        for skill in skills:
+            for dest, _ in sources()[skill]:
+                git("rm", "-r", "-q", "--cached", "--ignore-unmatch", "--", dest, env=env)
+        for path, content in files.items():
+            blob = git("hash-object", "-w", "--stdin", input=content)
+            git("update-index", "--add", "--cacheinfo", f"100644,{blob},{path}", env=env)
+        return git("write-tree", env=env)
+
+
+def changed(skills: list[str], parent: str | None) -> tuple[str, bool]:
+    tree = build_tree(skills, parent)
+    if parent:
+        return tree, tree != git("rev-parse", f"{parent}^{{tree}}")
+    return tree, bool(files_for(skills))
+
+
+def commit(skills: list[str]) -> bool:
+    fetch()
+    parent = catch_up()
+    tree, is_new = changed(skills, parent)
+    if not is_new:
+        say("nothing new to back up")
+        return False
+    present = [s for s in skills if any(p.exists() for _, p in sources()[s])]
+    msg = f"Back up {', '.join(present) or 'skill'} data ({time.strftime('%Y-%m-%d')})"
+    ident = {"GIT_AUTHOR_NAME": "skill-data", "GIT_AUTHOR_EMAIL": "skill-data@localhost",
+             "GIT_COMMITTER_NAME": "skill-data", "GIT_COMMITTER_EMAIL": "skill-data@localhost"}
+    new = git("commit-tree", tree, *(["-p", parent] if parent else []), "-m", msg, env=ident)
+    git("update-ref", f"refs/heads/{BRANCH}", new, *([parent] if parent else []))
+    say(f"committed {new[:7]} to {BRANCH}")
+    return True
+
+
+def last_push_age() -> float | None:
+    remote = ref(f"refs/remotes/{REMOTE}/{BRANCH}")
+    return time.time() - int(git("log", "-1", "--format=%ct", remote)) if remote else None
+
+
+def unpushed() -> int:
+    local, remote = ref(f"refs/heads/{BRANCH}"), ref(f"refs/remotes/{REMOTE}/{BRANCH}")
+    if not local:
+        return 0
+    return int(git("rev-list", "--count", f"{remote}..{local}" if remote else local))
+
+
+def push() -> None:
+    if not ref(f"refs/heads/{BRANCH}"):
+        say("nothing to push")
+        return
+    git("push", "-q", REMOTE, f"refs/heads/{BRANCH}:refs/heads/{BRANCH}")
+    fetch()
+    say(f"pushed {BRANCH} to {REMOTE}")
+
+
+def due(pending: bool = False) -> bool:
+    age = last_push_age()
+    return (pending or unpushed() > 0) and (age is None or age >= DUE_SECONDS)
+
+
+def status(skills: list[str]) -> None:
+    fetch()
+    for skill in skills:
+        present = [str(p).replace(str(HOME), "~") for _, p in sources()[skill] if p.exists()]
+        say(f"{skill}: {', '.join(present) if present else 'no data yet'}")
+    age = last_push_age()
+    say(f"unpushed commits: {unpushed()} · last push: {'never' if age is None else f'{age / 86400:.0f} days ago'}")
+    _, pending = changed(skills, ref(f"refs/heads/{BRANCH}"))
+    say(f"uncommitted changes: {'yes' if pending else 'no'}")
+    say(f"due: {'yes' if due(pending) else 'no'}")
+
+
+def restore(skills: list[str], force: bool) -> None:
+    fetch()
+    source = ref(f"refs/remotes/{REMOTE}/{BRANCH}") or ref(f"refs/heads/{BRANCH}")
+    if not source:
+        say("no backup to restore from")
+        return
+    for skill in skills:
+        for dest, local in sources()[skill]:
+            paths = git("ls-tree", "-r", "--name-only", source, "--", dest).splitlines()
+            for path in paths:
+                target = local if path == dest else local / Path(path).relative_to(dest)
+                if target.exists() and not force:
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                content = subprocess.run(["git", "-C", str(ROOT), "show", f"{source}:{path}"], capture_output=True, check=True).stdout
+                target.write_bytes(content)
+                say(f"restored {target}")
+
+
+def main(argv: list[str]) -> int:
+    global QUIET
+    QUIET = "--quiet" in argv
+    force = "--force" in argv
+    args = [a for a in argv if not a.startswith("--")]
+    if not args or args[0] not in {"status", "commit", "sync", "push", "restore", "show"}:
+        print(__doc__.strip())
+        return 2
+    cmd, names = args[0], args[1:]
+    unknown = [n for n in names if n not in sources()]
+    if unknown:
+        print(f"unknown skill: {', '.join(unknown)} (known: {', '.join(sources())})", file=sys.stderr)
+        return 2
+    skills = names or list(sources())
+    if cmd == "status":
+        status(skills)
+    elif cmd == "show":
+        for path, content in files_for(skills).items():
+            print(f"===== {path}\n{content.decode('utf-8', 'replace')}")
+    elif cmd == "commit":
+        commit(skills)
+    elif cmd == "sync":
+        commit(skills)
+        if due():
+            push()
+    elif cmd == "push":
+        commit(skills)
+        push()
+    elif cmd == "restore":
+        restore(skills, force)
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except RuntimeError as err:
+        print(f"skill-data: {err}", file=sys.stderr)
+        sys.exit(1)

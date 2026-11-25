@@ -1,188 +1,169 @@
 ---
 name: variant-lab
-description: Use when the user wants to see several design or copy alternatives for a page's sections and choose between them — "try a few variants of each section", "give me options for the hero", "A/B some versions of the landing page", "show me alternatives and let me pick", "more like the ones I picked". Builds a local-only lab page that renders the real page with every section swappable from a picker, fills it with deliberately different variants (in parallel when there are many), screenshots them, then runs further rounds in the direction the user's picks, mixes and notes reveal, pruning what lost, and promotes the winners.
+description: Use when the user asks for variants, options, or alternatives of something so they can compare and pick — a page or part of one ("variant lab on the settings page", "give me options for the hero", "A/B some versions of the landing page"), an engineering approach ("try a few ways to build the sync job", "variants of this API", "prototype some schema options"), or a product decision ("variants on pricing", "options for onboarding", "a few takes on what v1 includes"), "more like the one I picked", or "what have my picks taught you". Picks the lab the question needs: a lab page for what's judged by eye, working implementations through shared tests for what's judged by running code, side-by-side writeups for what's judged by consequences. Each round is five whole variants of exactly the scope asked for, ranked with the recommendation first, with today's version one click away for comparison. Later rounds follow the pick and prune what lost. A taste log kept across labs shapes and ranks future variants.
 ---
 
 # Variant lab
 
-Help someone choose a page's design by putting real alternatives in front of them, on the real
-page, with real data. Variant A of every section is always the section that ships today, so
-every alternative is judged against the baseline in place rather than in isolation or in a mockup.
+Help someone choose by putting real alternatives side by side, each one whole, each measured
+against what exists today. Every round is five complete variants of the thing the user named,
+ranked: A is your recommendation, and B through E follow in the order you'd rank them. Today's
+version (the page that ships, the code on the branch, the product's current behavior) stays one
+click away as **Current**. It sits outside the five and has no letter.
 
-The job has three phases. **Build the lab** once, **fill it** in rounds, then **promote** the picks.
-Don't skip ahead to writing variants: a variant you can't see beside its neighbors can't be judged,
-and that comparison is the whole point.
+The shape is the same whatever is being varied. **Pick the kind of lab**, **build it** once, **fill
+it** in rounds, then **promote** the pick. Throughout, a **taste log** records what each pick
+showed, so the next lab starts from what the user has already chosen instead of from zero. Don't
+skip ahead to writing variants: a variant you can't compare with its neighbors can't be judged, and
+that comparison is the whole point.
 
-## 1. Read the page first
+## 1. Pick the kind of lab
 
-Before anything else, learn what you're varying:
+Choose by how the user will judge the variants, not by the topic:
 
-- **The sections and their order.** List them by the role each plays (hero, problem, proof,
-  pricing, close), not by file name. Each section becomes a row in the picker.
-- **The data contract.** What variables each section receives, where its numbers come from, and
-  which numbers are checked against a fixture. Variants must use the same sources. A hardcoded
-  figure in a mockup becomes a wrong figure in production once it's picked.
-- **The rules.** The project's copy rules (CLAUDE.md, AGENTS.md, a copy record), the design
-  language (type scale, surfaces, accent color, motion attributes) and any band rhythm (such as
-  alternating dark and light sections). Variants keep their section's surface so the rhythm survives
-  any combination of picks. If the project has an `icps/` folder, copy variants are written for its
-  top-ranked profile. Use the `copywriting` skill for headline and body copy.
-- **What can't be duplicated.** Element ids that inline scripts bind to, singleton widgets, and
-  any script that finds sections by id and swaps them (localization, live updates). These decide
-  how variants are allowed to differ. See "Traps" below.
+| They'll judge it by | Kind | The lab | Guide |
+|---|---|---|---|
+| Looking at it | Visual | A local-only page that renders the real page, with the scope switched whole from a one-row picker | [references/visual.md](references/visual.md) |
+| Running and reading the code | Engineering | Each variant a working implementation in the real codebase, all run through one contract test and one compare script | [references/engineering.md](references/engineering.md) |
+| Weighing what follows from it | Product | One document with every variant written to the same template, each as concrete as what a customer would meet | [references/product.md](references/product.md) |
 
-## 2. Build the lab
+"Variant lab on the settings page", "options for the hero" and "variants of the pricing page" are
+visual. "A few ways to build the sync job", "variants of the webhook API" and "schema options for
+teams" are engineering. "Variants on pricing", "how should onboarding work" and "what could v1
+include" are product.
 
-A local-only route that renders the page's real layout and data, with each section chosen by the
-query string: `/landing-lab?hero=b&how=c`. Ingredients:
+Some questions span kinds. Run the one the question is asking now: *what* to do is product, *how to
+build it* is engineering, *how it looks* is visual. Then chain the next lab after a pick. A pricing
+model picked in a product lab becomes a pricing page in a visual lab. A request for "pricing page
+variants" with the tiers still undecided is a product question first; say so.
 
-- **A registry**, ordered like the page: `section => letter => [view, short label]`. Letter `a` maps
-  to the live partial and never changes. Unknown or missing letters fall back to the default pick.
-- **Shared view data.** Extract the live page's data-building into one method both routes call, so
-  the lab can't drift from what production renders. This is the only refactor the live page should
-  need.
-- **A picker** fixed in a corner: one row per section, one button per letter, each a link to the
-  same URL with only that section's pick changed (the other picks are preserved), plus a
-  `Picks: hero=B how=C …` line the user can copy back to you. Each row also opens a panel with a
-  checkbox per letter and a note field. That's for when the answer is a mix of two variants, or a
-  pick with a change: the line then reads `hero=B+D`, the notes are listed under it, and a Copy
-  button copies both. Ticked letters override the letter on screen, so browsing doesn't change the
-  answer. Make the picker collapsible. Size it so every letter fits. Pruning between rounds keeps
-  that to about five letters per section.
-- **A label on every section** (`hero · B — Split: claim left, card right`) so any screenshot says
-  what it shows.
-- **Guard rails.** Register the route only in the local environment, mark the page `noindex`, and
-  never let the lab's query strings reach the production route or its cache.
-- **Login and data.** Screenshots and workers can't sign in. If the page sits behind a login, the
-  lab route signs in a local user itself. If the local database is too thin for the page to look
-  real, add a `?data=sample` toggle that builds the same objects the live page receives from a
-  fixture, and keep live data as the default.
-- **Placeholders.** Create an empty file for every registered variant before any are written, so
-  the lab renders from the first minute and parallel writers never touch the registry.
+State the kind you chose, the scope (step 2) and the taste you're applying (step 2) in one line
+before building, so the user can redirect cheaply. Then read that kind's guide. It covers building
+the lab, the axes to vary, what a checked variant means, and promotion.
 
-Then serve the app over the real host (for Laravel, the `run-laravel-valet` skill) and confirm that
-the lab and the live page both return 200.
+## 2. Read before writing
 
-Stack-specific wiring for Laravel and Blade is in [references/laravel.md](references/laravel.md).
+Learn what every variant must honor before writing one:
+
+- **The scope.** The scope is exactly what the user named. "Variant lab on the settings page"
+  means each variant is a complete settings page. "The settings page's billing section" means each
+  variant is a complete billing section, and the rest of the page stays as it is. "The sync job"
+  means each variant is a whole sync job: its schema, API and failure handling designed together.
+  Don't split the scope into parts to be picked one at a time, and don't leave the user to assemble
+  a result from pieces. Each variant has to work as a whole, with its layout, copy, hierarchy and
+  interactions (or its data model, interface and failure paths) designed together.
+- **Current.** What exists today at that scope. Read it closely, because every variant is compared
+  with it. If nothing exists yet, there's no Current. The obvious first version, the one the user
+  would get without asking for options, then competes as one of the five, ranked where it belongs.
+- **The contract.** What every variant must keep true: the data the scope receives, the behavior
+  callers rely on, the constraints the business runs under. A variant that breaks it can't be
+  picked without hidden work.
+- **The rules.** Project instructions (CLAUDE.md, AGENTS.md), its conventions, and the user's own
+  constraints. If the project has an `icps/` folder, write for its top-ranked profile.
+- **Their taste so far.** Read the taste log, if it exists: the General preferences for this kind,
+  this project's section, the open questions, and how often your recommendation has been the pick.
+  If there's no log, run `scripts/backup.sh restore` once to bring back a backup. Where the log
+  lives and how to use it are in [references/taste.md](references/taste.md). The current
+  request, the project's rules and the user's notes all outrank it.
+
+**Separate parts only on request.** If the user asks by name to vary parts separately ("vary the
+header and the form separately"), each named part gets its own row of five ranked variants, and
+picks name the part (`header=B form=D`). Never split on your own initiative.
 
 ## 3. Round one: diverge
 
-Write two new variants per section (B and C), each a different *idea*, not a recolor: a different
-layout, a different thing emphasized, a different headline strategy. Good axes to split on:
+Write five whole variants, A through E, each a different *idea*, not a reworded or retuned Current
+or a reworded neighbor. Each guide lists axes to split on. Round one exists to discover the user's
+taste, so spread the five across those axes rather than polishing five takes on one idea. Where the
+taste log already answers an axis, stay inside the answer and spend the variety on axes it doesn't.
+Make one of the five a **challenger** that tests an open question or a thinly supported preference,
+and say what it tests. Without one, the log only ever confirms itself.
 
-- layout: centered vs split, artifact left vs right, grid vs list vs table
-- what leads: the problem, the proof, the product, or a question
-- abstraction: slogan or thesis vs a concrete artifact with real numbers (a remittance line, a
-  broken spreadsheet, a real API response)
-- density: one claim and whitespace vs an annotated, information-rich object
+**Rank them** once they're built and checked, not before. A is the one you'd ship, B the next, and
+so on down to E. Rank by how well each serves the people it's for within the project's rules, not by
+how novel it is, and by what the taste log says this user picks. The recommendation is a prediction
+of their pick, and the log keeps its track record. Reletter the variants to match the ranking before
+you present them, so the letter and the rank always agree.
 
-The aim of round one is to discover the user's taste. Spread the variants across these axes rather
-than writing three polished takes on one idea.
-
-**Parallelize by section** when there are more than a handful of variants: one worker per section
-(or two small sections per worker), each told to edit only its own variant files. Brief every
-worker with the same rules: the data contract, the copy rules, the id restrictions, the surface to
-keep, the screenshot command, and "report a 1–2 sentence description per variant plus a revised
-label if yours no longer fits". You update the registry labels yourself afterwards, so workers
+**Parallelize** when building five whole variants is more than a few minutes' work: one worker per
+variant, split the way the guide says. Tell each worker to touch only its own files. Brief every
+worker with the same rules: the scope, the contract, the project's rules, what they must not touch,
+the check to run, and "report a 1–2 sentence description and a short name for your variant". You
+own the shared pieces (registry, switch, compare script, lab document) and the ranking, so workers
 never edit the same file.
 
-Every variant gets checked by its writer before it's reported: it returns 200, it's screenshotted
-at desktop *and* phone width, and someone has looked at those screenshots and fixed what's off.
+Every variant is checked by its writer before it's reported. Each guide defines what checked means
+for its kind.
 
 ## 4. Present a round
 
-- A table per round: section rows, variant columns, each cell the variant's headline or concept in
-  one line. The user should be able to choose from the table and use the lab to confirm.
-- Embed three or four screenshots of the most distinct variants. List where the rest are.
-- **Caveats before picking**, and only real ones: a mock that depicts a feature that doesn't
-  exist, an artifact whose numbers contradict each other, a layout that breaks on a phone, an
-  analytics event name that doesn't exist yet. Check the strongest-looking variants hardest. A
-  convincing mockup of a feature you don't have is the most likely way for this process to put
-  something false on the page.
-- Ask for picks in the picker's own format (`hero=B how=C …`): use Copy picks, tick more than one
-  letter to mix them, and leave a note for anything a letter can't say.
+- **A table per round, in ranked order:** rank, letter, short name, the idea in one line, and a
+  one-line reason for its rank ("A: the only one that puts plan and usage on one screen without a
+  tab"). Add Current as a row above A, unranked, for reference. Mark the challenger and what it
+  tests. The user should be able to choose from the table and use the lab to confirm.
+- The evidence the kind calls for: screenshots of all five, the compare table and call sites, or
+  the concrete artifacts. Lead with A and say where the rest are.
+- **Caveats before picking**, and only real ones. Check the highest-ranked variants hardest: a
+  convincing variant built on something false is the most likely way for this process to ship a
+  mistake. The usual falsehoods are a feature that doesn't exist, a number with no source or one
+  that contradicts another, a test that passes because it skips the hard case, and a library API
+  recalled from memory. Each guide lists more.
+- Ask for one pick: a single letter (`Pick: C`), or a mix with a note saying what to take from each
+  (`Pick: B+D` — "B's layout, D's copy"). The visual lab's picker produces this line. The other labs
+  end with a `Pick:` line to fill in.
 
 ## 5. Later rounds: converge on their taste
 
-When picks come back, read them as evidence, losers included. A note outranks your inference, and
-a mix (`hero=B+D`, "B's layout, D's headline") is the most specific evidence of all.
+When a pick comes back, read it as evidence, the passed-over variants included. A note outranks
+your inference, and a mix is the most specific evidence of all.
 
 1. **Write the inferred taste down** in a sentence or two, naming both what won and what lost
-   ("concrete artifacts with real numbers, problem-first, split layouts, numbered pins; passed on
-   slogans, tile grids and centered statements"). Say it to the user. That sentence is the brief
-   for every worker, and it lets the user correct the reading before more is built on it.
-2. **Prune what lost.** Do this at the start of every round after the first. Once the taste
-   sentence records the losers, delete each variant that wasn't picked or mixed in: its file and
-   its registry entry. Keep A, because it's the live partial, and keep every letter in the pick,
-   since the letters of a mix are the reference for the blend. Keep a shared helper only if a
-   surviving variant still includes it. Losers left in the picker crowd it
-   and pull new variants back toward ideas the user already turned down. Their screenshots stay in
-   `.context/` as the record.
-3. **Make their picks the lab's default**, so the bare URL opens on their current page and each new
-   letter is compared against their choice, not against A. For a mix, use the letter the note
-   treats as the base, or else the first one.
-4. **Add D/E/F to every section**, including sections where they kept A. There, stay close to A and
-   push only on the traits they showed elsewhere. Each new variant should be a distinct take
-   *within* the inferred direction, specified up front (one line each) so the three don't converge.
-   Where they mixed, D is the blend the note describes, and E and F try other ways of combining
-   the same letters.
-   Don't reuse a pruned letter. A letter in a screenshot or an old `Picks:` line should always mean
-   the same variant.
-5. Present it the same way as round one, then prune and repeat until every section has a pick. A
-   mix isn't a final pick. It means that section gets another round.
+   ("concrete artifacts with real numbers, problem-first, split layouts; passed on slogans and
+   centered statements", or "keep it in the database, no new dependencies; passed on the queue and
+   the event log"). Say it to the user. That sentence is the brief for every worker, and it lets
+   the user correct the reading before more is built on it.
+2. **Record the round in the taste log**: append it to `picks.md`, update the profile, and commit
+   back it up with `scripts/backup.sh sync`, as [references/taste.md](references/taste.md)
+   describes. If the user corrected your taste sentence or stated a preference outright, record it
+   as stated. Mention the update in one line.
+3. **Prune what lost.** Do this at the start of every round after the first. Delete every variant
+   that wasn't picked or mixed in, along with its registry entry, branch, or section. Keep Current,
+   and keep the picked letters as the reference for the next round, one click away like Current
+   and outside the five. Losers left in the lab crowd it and pull new variants back toward ideas the
+   user already turned down. Their screenshots, numbers and write-ups stay in `.context/lab/` as the
+   record.
+4. **Write five new whole variants**, each a distinct take *within* the inferred direction,
+   specified up front in one line each so the five don't converge. Where the user mixed, one of
+   them is the blend the note describes, and the others try other ways of combining the same
+   variants.
+5. **Use fresh letters every round**, so a letter in an old screenshot, table or `Pick:` line
+   always means the same variant: round two is F–J, round three K–O, and so on (after Y, continue
+   with AA–AE). The order still follows rank, so the round's first letter is your recommendation.
+6. **Rank again** and present the round the same way, with the recommendation first. The lab opens
+   on it by default.
+7. Prune and repeat until the user picks a single letter and says it's done. A mix isn't a final
+   pick. It means another round.
 
 ## 6. Promote
 
-Once every section has a pick:
+Once there's a final pick, it replaces Current and the lab comes down. Each guide lists the
+specifics. In every kind:
 
-- Move each winning variant into the live partial (merging its shared helpers into the right home,
-  and deleting any copy of the live data-building it carried).
-- Restore whatever the live page needs: the ids that scripts and localization swap by, the jump
-  anchors other sections link to, analytics event names.
-- Delete the last round's losing variants, the registry, the lab route and view, any sample-data
-  fixture or local sign-in built for it, and any build-config line that existed only for the lab.
-- Update the page's tests (section order, fixture drift, example parsing), the plan or copy record
-  if the project keeps one, and run the tests that cover the page.
+- Put the winner where the real thing lives, and finish whatever the variant left as a stub.
+- Delete the lab: the losing variants, the registry or switch, the lab's branches, and anything
+  that existed only to serve it.
+- Keep what earned its place, such as a contract test that pins the decision.
+- Record the decision and the rejected variants with the reason each lost, wherever the project
+  keeps decisions (the `plan-docs` skill if it keeps plans).
+- Record the final pick in the taste log, then re-read this lab's rounds there and check the profile
+  still says what they show. A preference inferred in round one doesn't always survive to the end.
+  Then back it up with `scripts/backup.sh push`.
+- Run the tests that cover what changed.
 
-## Traps
+Lab output that isn't code (screenshots, compare results, product documents, worktrees) goes under
+`.context/lab/<topic>/`, or another gitignored scratch directory if the project has no `.context/`.
 
-- **Interactive widgets bound by id.** If the live section has an inline script that binds to
-  element ids, move the script into its own partial first. Each variant then includes the widget
-  and the script exactly once, and two variants are never on the page at the same time.
-- **Scripts that swap sections by id.** If the page re-renders sections by id (localizing to the
-  visitor, live updates), a variant that reuses that id gets replaced by variant A's markup
-  mid-review. Give variants their own ids (`how-c`). Keep an id only when other sections link to it
-  as an anchor and nothing swaps it.
-- **Built CSS.** With Tailwind or similar compiled at build time, classes that appear only in a new
-  file don't exist until a rebuild. Run the build in watch mode once, in the background, and tell
-  every worker not to run their own build, because concurrent builds collide. Stop the watch from
-  emptying its output directory on each rebuild (Vite: `--no-emptyOutDir`). Otherwise every save
-  by any worker 500s the lab on a missing manifest for several seconds. If the stylesheet scans an
-  explicit list of files, add the lab view to it, and remove that line at promotion.
-- **Phone screenshots.** Headless Chrome's `--window-size` won't go below about 500px, so a
-  "390px" CLI screenshot is really a cropped desktop layout. Use Playwright with a real viewport and
-  screenshot the section's element. Hide the picker and the sticky header first, because both land
-  in the middle of element captures. [scripts/shoot.mjs](scripts/shoot.mjs) does this.
-- **Mock artifacts must be true and consistent.** A spreadsheet, remittance, offer letter or
-  popover drawn inside a variant is still a claim. Every number comes from the real data source.
-  The product can actually do what the mock shows it doing. Numbers inside one artifact agree with
-  each other (an offer pegged to last year shouldn't be priced on this year's amount without saying
-  so).
-- **Old notes after a round.** The picker keys its mixes and notes to each section's letters, so
-  pruning and adding letters clears them. If a round changes only labels, use "Clear mixes and
-  notes" before the user starts picking.
-- **Defaults hide comparisons.** Once the default is the user's picks, `?section=a` is the only way
-  to see the live version. Mention that once.
+## Asked what the lab has learned
 
-## Screenshots
-
-```sh
-node <skill-dir>/scripts/shoot.mjs --base https://app.test/landing-lab --out .context/lab/shots hero b hero c how b
-```
-
-This writes `<section>-<letter>-{desktop,mobile}.png` for each pair and exits 1 if any page fails
-to load. Run it from the project root: it loads `playwright` from the project's `node_modules`. If
-the project doesn't have it, run `npm i -D playwright` (`npx playwright` won't make it loadable).
-If Playwright's own Chromium build isn't downloaded, the script falls back to the installed Google
-Chrome, so don't patch a copy per worker. If the picker or the sticky header uses a different
-selector, pass `--hide '<css>'`.
+"What's my variant taste", "what have my picks taught you", "forget that I like tabs": read or edit
+the taste log as [references/taste.md](references/taste.md) describes. No lab needs to be running.

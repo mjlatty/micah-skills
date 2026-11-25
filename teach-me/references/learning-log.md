@@ -10,6 +10,8 @@ It lives outside every repo because what someone knows belongs to them, not to a
 
 What a specific repo does is a fact about that repo, and it goes in the entry's `repos:` lines.
 
+[../scripts/backup.sh](../scripts/backup.sh) copies the log onto the skills repo's `skill-data` branch so it outlives the machine. That repo is public: snapshots are scrubbed of the home path, emails and secret-shaped strings, but everything else goes in as written, which is one more reason the rules below keep code and secrets out.
+
 ## Format
 
 One `##` section per concept, keyed `<language or library>: <concept>`. Keep concepts at lesson size, the slice one sitting covers, so `go: error wrapping and inspection` and not `go: errors`.

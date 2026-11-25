@@ -23,7 +23,7 @@ Find the version in use from the lockfile or manifest (`go.mod`'s `go` line, `pa
 
 ## 2. Load the learning log
 
-Read the log described in [references/learning-log.md](references/learning-log.md). Look for this concept and its neighbors.
+Read the log described in [references/learning-log.md](references/learning-log.md). If it doesn't exist, run `scripts/backup.sh restore` once to bring back a backup. Look for this concept and its neighbors.
 
 - **Solid**: skip it, or give it one line as a bridge to what's new.
 - **Shaky**: this is where to spend time. Start from what they missed last time, and ask about it again in a new form.
@@ -132,7 +132,7 @@ Don't summarize the lesson. They just took it.
 
 ## 7. Update the log
 
-Write the log entry before the final message, as described in [references/learning-log.md](references/learning-log.md). Record what their answers showed, not what you covered: a topic you explained but never tested is *not yet tested*, not *solid*. Mention the update in one line at the end, so they know the next session will pick up from here.
+Write the log entry before the final message, as described in [references/learning-log.md](references/learning-log.md). Record what their answers showed, not what you covered: a topic you explained but never tested is *not yet tested*, not *solid*. Then run `scripts/backup.sh sync`, which commits the log to the skills repo's `skill-data` branch and pushes it when the last push is a week or more old. Mention the update in one line at the end, so they know the next session will pick up from here.
 
 ## Anti-patterns
 

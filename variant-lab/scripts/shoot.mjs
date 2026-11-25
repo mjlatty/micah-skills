@@ -1,13 +1,15 @@
-// Screenshot variant-lab sections at desktop and phone widths.
+// Screenshot variant-lab variants at desktop and phone widths.
 //
-//   node shoot.mjs --base https://app.test/landing-lab --out .context/lab/shots hero b hero c how b
+//   node shoot.mjs --base https://app.test/settings-lab --out .context/lab/shots current a b c d e
 //
-// For each <section> <letter> pair, loads <base>?<section>=<letter>, hides the picker and the
-// sticky header (both land mid-capture otherwise), and screenshots the element #lab-<section>
-// into <out>/<section>-<letter>-{desktop,mobile}.png. Uses a real 390px viewport, which headless
-// Chrome's --window-size can't do. Options: --hide <css> overrides what is hidden (the picker
-// and a page-level or sticky <header>, not headers inside sections); --wait <ms> adds a pause
-// after load (motion, hydration).
+// For each letter, loads <base>?<param>=<letter> (param defaults to `v`), hides the picker and any
+// page-level or sticky header outside the scope (they land mid-capture otherwise), and
+// screenshots the element matching --scope (default #lab-scope), or the full page if nothing
+// matches, into <out>/<letter>-{desktop,mobile}.png. Uses a real 390px viewport, which headless
+// Chrome's --window-size can't do.
+// Options: --param <key> changes the query key; --scope <css> changes the captured element;
+// --hide <css> overrides what is hidden; --wait <ms> adds a pause after load (motion, hydration).
+// For a lab varied in separate parts: --param header --scope '#lab-header' a b c d e.
 // Exits 1 if any page fails to load.
 //
 // Run from the project root so `playwright` resolves from its node_modules. If Playwright's own
@@ -19,19 +21,28 @@ import { join } from 'node:path';
 const require = createRequire(join(process.cwd(), 'noop.js'));
 const { chromium } = require('playwright');
 
-const opts = { base: null, out: '.context/lab/shots', hide: '#landing-lab-picker, body > header, header.sticky, header.fixed', wait: 300 };
-const pairs = [];
+const opts = {
+  base: null,
+  out: '.context/lab/shots',
+  param: 'v',
+  scope: '#lab-scope',
+  hide: '#lab-picker, #landing-lab-picker, body > header, header.sticky, header.fixed',
+  wait: 300,
+};
+const letters = [];
 const argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i++) {
   const arg = argv[i];
   if (arg === '--base') opts.base = argv[++i];
   else if (arg === '--out') opts.out = argv[++i];
+  else if (arg === '--param') opts.param = argv[++i];
+  else if (arg === '--scope') opts.scope = argv[++i];
   else if (arg === '--hide') opts.hide = argv[++i];
   else if (arg === '--wait') opts.wait = Number(argv[++i]);
-  else pairs.push(arg);
+  else letters.push(arg);
 }
-if (!opts.base || pairs.length === 0 || pairs.length % 2 !== 0) {
-  console.error('usage: node shoot.mjs --base <lab-url> [--out dir] [--hide css] [--wait ms] <section> <letter> [...]');
+if (!opts.base || letters.length === 0) {
+  console.error('usage: node shoot.mjs --base <lab-url> [--out dir] [--param v] [--scope css] [--hide css] [--wait ms] <letter> [...]');
   process.exit(2);
 }
 mkdirSync(opts.out, { recursive: true });
@@ -49,23 +60,32 @@ try {
   browser = await chromium.launch({ channel: 'chrome' });
 }
 try {
-  for (let i = 0; i < pairs.length; i += 2) {
-    const [section, letter] = [pairs[i], pairs[i + 1]];
+  for (const letter of letters) {
     const url = new URL(opts.base);
-    url.searchParams.set(section, letter);
+    url.searchParams.set(opts.param, letter);
+    const prefix = opts.param === 'v' ? '' : `${opts.param}-`;
     for (const [name, viewport, scale] of viewports) {
       const page = await browser.newPage({ viewport, deviceScaleFactor: scale, reducedMotion: 'reduce', ignoreHTTPSErrors: true });
       const res = await page.goto(url.toString(), { waitUntil: 'networkidle' });
       if (!res || !res.ok()) {
-        console.error(`${section}=${letter} ${name}: HTTP ${res ? res.status() : 'no response'}`);
+        console.error(`${opts.param}=${letter} ${name}: HTTP ${res ? res.status() : 'no response'}`);
         process.exitCode = 1;
         await page.close();
         continue;
       }
-      await page.addStyleTag({ content: `${opts.hide} { display: none !important; }` });
+      // Hide only what sits outside the scope: a sticky header inside a whole-page variant is
+      // part of the variant.
+      await page.evaluate(({ hide, scope }) => {
+        const root = document.querySelector(scope);
+        for (const el of document.querySelectorAll(hide)) {
+          if (!root || !root.contains(el)) el.style.setProperty('display', 'none', 'important');
+        }
+      }, { hide: opts.hide, scope: opts.scope });
       if (opts.wait) await page.waitForTimeout(opts.wait);
-      const path = join(opts.out, `${section}-${letter}-${name}.png`);
-      await page.locator(`#lab-${section}`).screenshot({ path });
+      const path = join(opts.out, `${prefix}${letter}-${name}.png`);
+      const scoped = page.locator(opts.scope).first();
+      if (await scoped.count()) await scoped.screenshot({ path });
+      else await page.screenshot({ path, fullPage: true });
       console.log(path);
       await page.close();
     }
