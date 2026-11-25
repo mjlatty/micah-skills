@@ -830,3 +830,27 @@ offered: current cards · A pinned phone · B day log rows · C stories player �
 picked: E · note: "I like E the best but it's not perfect, lets try a few variants with 'the page is the thread' cncept"
 recommendation picked: n/a
 taste: on a phone the page is the conversation: full-width bubbles, timestamps, replies arriving as you scroll, no device frame; passed on the pinned phone, the dense log, the stories player and the autoplay demo
+
+## 2026-11-25 · micahlatty/linkfount-tall · visual · pinned sub-list in a home section · round 2
+offered: F bar-topped shelf, E's row heading B's card (rec) · G B with a sans list title · H covers right, short card · I bar with first three titles · J E on phones, G on desktop
+picked: none — redirected · note: "I think we already have stuff we do for sublists that AREN'T pinned - we should probably have our solution work for both situations"
+recommendation picked: no
+taste: a pinned sub-list and an unpinned one should be one design; pinning marks it and moves it up rather than turning it into a different object
+
+## 2026-11-25 · micahlatty/linkfount-tall · visual · sub-lists in a home section, pinned or not · round 3
+offered: K open shelf, today's row in sans, pinned = same row in pin card (rec) · L shelf cards, every sub-list a card with bar header · M title panels, bar + first three titles · N cover cards, name left covers right · O bars, one slim row each
+picked: L, plus the assistant's suggested K+M blend (shelf when entries have pictures, title rows when they don't) · note: "show me a lab with just L and your recommendation of K+M combination"
+recommendation picked: partly
+taste: one design for pinned and unpinned; contents shown as covers only when there are real pictures; still weighing light rows on the page (K) against a card per sub-list (L)
+
+## 2026-11-25 · micahlatty/linkfount-tall · visual · sub-lists in a home section, pinned or not · round 4
+offered: P K+M, today's row in sans, covers when pictured else titles, pinned in pin card (rec) · L shelf cards, every sub-list a card with bar header
+picked: P · note: "I like P - but next to the subtitle name we shoudl rpobably have horizontal line like in the main list instead of having the See more button"
+recommendation picked: yes
+taste: light rows on the page over a card per sub-list; a sub-list heading should echo the section heading (name + hairline to the edge, arrow only on hover), not add its own arrow
+
+## 2026-11-25 · mjlatty/orrin · visual · iOS chat glass chrome · round 1
+offered: A Messages header (rec) · B liquid card + composer tray · C range meter · D compact left row · E quiet line (challenger: plain text over a pill)
+picked: C · note: "I like c the best, we can get rid of settings button and let it be triggered by clicking the orrin contact card"
+recommendation picked: no
+taste: the day drawn as a concrete artifact (range band against the target, what's left shown without a tap) under a small centered icon-and-name capsule; send on its own glass beside the field; one fewer control (the card opens Settings); passed on the literal Messages stack, the fused card, the left-aligned row and plain grey text

@@ -1,15 +1,15 @@
 # Variant lab taste
 
 ## Calibration
-visual: no ranked rounds yet
+visual: recommendation picked 0 of 1 ranked rounds (last: no)
 engineering: no ranked rounds yet
 product: no ranked rounds yet
 
 ## General
-- [visual] concrete artifacts with real data, and the real product shown working, over slogans, abstract tiles, prose and placeholders · 15 for, 1 against · 4 projects · last 2026-11-24
+- [visual] concrete artifacts with real data, and the real product shown working, over slogans, abstract tiles, prose and placeholders · 16 for, 1 against · 4 projects · last 2026-11-25
 - [visual] big, full-bleed pictures and colour over framed, inset or rounded plates · 11 for, 1 against · 2 projects · last 2026-11-23
 - [visual] quiet marks (text kicker, lit rule, plain text links, dimmed text) over ornament (pills, icons, ribbons, gradients, tags) · 12 for, 3 against · 3 projects · last 2026-11-18
-- [visual] fewer visible controls (one primary action, extras tucked away, no duplicate close) over everything exposed · 10 for, 2 against · 2 projects · last 2026-11-17
+- [visual] fewer visible controls (one primary action, extras tucked away, no duplicate close) over everything exposed · 11 for, 2 against · 3 projects · last 2026-11-25
 - [visual] compact and dense (tables, index rows, short headers) over long, airy layouts · 7 for, 1 against · 2 projects · last 2026-11-17
 - [visual] plain, literal headings and labels over metaphors, allusions and slogans · 5 for, 1 against · 3 projects · last 2026-11-20
 - [visual] one treatment reused everywhere (notes, pins, triggers, cards) over per-place variations · stated 2026-11-17
@@ -47,6 +47,10 @@ product: no ranked rounds yet
 - [visual] one real day as an annotated thread over feature heroes, demos, app comparisons and posters · 3 for, 0 against · last 2026-11-25
 - [visual] smooth, continuous scroll motion over snapping, reveal-once and word-by-word blur · 2 for, 0 against · last 2026-11-24
 - [visual] light page over dark spine or dark chapters · 1 for, 0 against · last 2026-11-24
+
+- [visual] one design per object; a state (pinned, featured) marks it rather than swapping in a different layout · stated 2026-11-25
+- [visual] iOS app: no settings button; tapping the Orrin contact card opens Settings · stated 2026-11-25
+- [visual] iOS app: a drawn range-vs-target meter over a literal copy of Messages' header · 1 for, 0 against · last 2026-11-25
 
 ## Open questions
 - [visual] page-level tabs vs one scrolling page: tabs won 4 (breezyfees ×2, profile editor ×2), one page won 3 (settings, sync setup, events)
