@@ -860,3 +860,14 @@ offered: F C with card opening Settings (rec) · G one panel · H meter in the c
 picked: J (final) · note: "I like 5 - and I think we should update the app icon to use that \"partial completion\" ring look too"
 recommendation picked: no
 taste: the brand mark doubling as the data (the icon's ring fills with the day) over a separate bar; numbers as one quiet line under the name; carried the motif into the app icon
+
+## 2026-11-25 · micahlatty/linkfount-tall · visual · sub-lists in a home section, pinned or not · round 5 (final)
+offered: Q, P with a section-style heading (name, hairline, arrow on hover) (rec)
+picked: Q · notes: "I think we should just drop item count for the sublists", then "Q - but drop the horizontal line actualy", then "yes, promote Q"
+recommendation picked: partly
+taste: sub-list headings as bare sans names — no count, no hairline, no standing arrow; restraint over decoration in nested headings
+## 2026-11-25 · mjlatty/linkfount-tall · visual · admin moderation page · round 1
+offered: A one page, worst first (rec) · B overview with side rails · C inbox, list beside open case · D dense console table · E today's tabs, tightened (challenger: tabs for a work queue)
+picked: B · note: "I think I like B"
+recommendation picked: no
+taste: everything visible on one screen, attention first (illegal callout, budget bar), queue grouped by tier, tools in a side rail; passed on one-case-at-a-time inbox, expand-to-see table rows, tabs, and a single long column with an index
