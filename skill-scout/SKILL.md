@@ -6,7 +6,8 @@ description: Use when work suggests a reusable skill, an installed skill misfire
 # Skill scout
 
 Keep durable evidence of recurring friction, skill failures, and avoidable token cost. Use one global
-notebook so patterns survive deleted workspaces and span repositories.
+notebook so patterns survive deleted workspaces and span repositories. The SessionStart hook also
+backs it up to the skills repo's `skill-data` branch (`bin/skill-data`), weekly at most.
 
 ## Choose one mode
 

@@ -20,7 +20,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `skill-scout` | Records or audits friction, skill failures, and token waste, then harvests evidence into fixes |
 | `teach-me` | Teaches one concept from your own repo's good and bad examples, quizzes you, checks version-specific facts, and logs what you've learned |
 | `technical-blog` | Technical posts written from the conversation that produced the work |
-| `variant-lab` | A local-only lab page for comparing alternative versions of a page's sections on the real page, with rounds that converge on what you pick |
+| `variant-lab` | Five whole, ranked alternatives per round, compared against what exists today: pages on a local lab page, engineering approaches as working code through one shared test, or product decisions as side-by-side write-ups. Rounds converge on your picks, and a taste log kept across projects shapes future labs |
 
 `icp-definition` is the hub: it writes an `icps/` folder into a project, and `copywriting`,
 `seo-improvement`, `monetization-strategy`, `product-changelog`, and `technical-blog` read it for
@@ -94,6 +94,40 @@ list a skill after install, fall back to copies:
 ```
 
 Copies don't track edits, so re-run that after changing a skill.
+
+## Backing up what skills learn
+
+Some skills learn as they're used, and keep what they learn outside every repo so it's shared by
+every harness and survives deleted worktrees:
+
+| Skill | Data | Local path |
+|---|---|---|
+| `variant-lab` | Taste log: what your picks showed | `~/.local/share/variant-lab/` |
+| `teach-me` | Learning log: what you've shown you know | `~/.local/share/teach-me/` |
+| `skill-scout` | Friction notebook | `~/.claude/skill-ideas.md` (+ archive) |
+
+`bin/skill-data` copies them onto this repo's `skill-data` branch, so they survive the machine too:
+
+```sh
+bin/skill-data status            # what exists, and whether a push is due
+bin/skill-data sync              # commit what changed; push if the last push is a week old
+bin/skill-data push              # commit and push now
+bin/skill-data restore           # on a new machine: write back every file that's missing
+bin/skill-data show              # print exactly what would be committed
+```
+
+Each skill calls it when it writes (`scripts/backup.sh` in the skill), and `skill-scout`'s
+SessionStart hook runs `sync` in the background, so commits happen as data changes and pushes happen
+about weekly. Snapshots are built with git plumbing on their own branch, so no checkout, index or
+current branch is touched, and `master` holds only the skills.
+
+**This repo is public, and so is the branch.** Every snapshot is scrubbed on the way in: the home
+directory becomes `~`, and emails and secret-shaped strings are redacted. Project names, paths under
+`~`, and your own notes go in as written. The local files are never modified. Run
+`bin/skill-data show` to see exactly what would be published.
+
+To add a skill's data, add it to `sources()` in `bin/skill-data` and give the skill a
+`scripts/backup.sh` like `variant-lab`'s.
 
 ## Adding a skill
 

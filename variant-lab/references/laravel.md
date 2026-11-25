@@ -1,69 +1,80 @@
 # Laravel + Blade wiring
 
-The lab as it was first built (Laravel 13, Blade partials, Tailwind 4 via Vite). Adapt the names to
-the project. The shape is what matters.
+First built for a landing page (Laravel 13, Blade partials, Tailwind 4 via Vite) and shown here for
+a settings page. Adapt the names to the project. The shape is what matters.
 
 ## Share the live page's view data
 
 Pull the controller's data-building into a public method, so both routes render from one source:
 
 ```php
-// app/Http/Controllers/HomeController.php
-public function __invoke(Request $request): Response
+// app/Http/Controllers/SettingsController.php
+public function __invoke(Request $request): View
 {
-    $html = view('welcome', $this->viewData())->render();
-
-    return PublicCache::respond($html, PublicCacheControl::HOUR, $request);
+    return view('settings.index', $this->viewData($request));
 }
 
-/** @return array{demo: HomeDemoCard, commercial: array{chart: string, coverage: string}|null, story: HomeStory} */
-public function viewData(): array
+/** @return array{user: User, plan: Plan, usage: UsageSummary, invoices: Collection<int, Invoice>} */
+public function viewData(Request $request): array
 {
     // …whatever __invoke used to build inline…
 }
 ```
 
+If the scope is a whole page, also move the live view's content (everything inside the layout) into
+a partial the live view includes, `settings/partials/body.blade.php`, so the lab can render it as
+Current. If the scope is one section, its partial already serves.
+
 ## The lab controller
 
 ```php
-// app/Http/Controllers/LandingLabController.php
-final class LandingLabController extends Controller
+// app/Http/Controllers/SettingsLabController.php
+final class SettingsLabController extends Controller
 {
-    /** @var array<string, array<string, array{0: string, 1: string}>> section => letter => [view, label], page order */
-    public const SECTIONS = [
-        'hero' => [
-            'a' => ['partials.home.hero', 'Centered: "Get the rate. And the proof."'],
-            'b' => ['partials.home.variants.hero-b', 'Split: claim and proof points left, card right'],
-            'c' => ['partials.home.variants.hero-c', 'Thesis headline, proof strip under the card'],
-        ],
-        // …one entry per section…
+    /** @var array<string, array{0: string, 1: string}> letter => [view, short name], ranked: the first is the recommendation. */
+    public const VARIANTS = [
+        'a' => ['settings.variants.two-column.index', 'Two columns: plan and usage beside the forms'],
+        'b' => ['settings.variants.attention-first.index', 'Attention first: what needs doing, then the rest'],
+        // …five in all, in ranked order…
     ];
 
-    /** @var array<string, string> What the bare URL opens on; the user's picks after round one. */
-    public const DEFAULT_PICKS = ['hero' => 'a' /* … */];
+    /** @var array<string, array{0: string, 1: string}> Earlier rounds' picks, kept one click away as reference. */
+    public const REFERENCES = [];
 
-    public function __invoke(Request $request, HomeController $home): View
+    public function __invoke(Request $request, SettingsController $settings): View
     {
-        $picks = [];
-        foreach (self::SECTIONS as $section => $variants) {
-            $choice = strtolower((string) $request->query($section, self::DEFAULT_PICKS[$section]));
-            $picks[$section] = array_key_exists($choice, $variants) ? $choice : self::DEFAULT_PICKS[$section];
+        $ranked = array_keys(self::VARIANTS);
+        $all = ['current' => ['settings.partials.body', 'Live'], ...self::VARIANTS, ...self::REFERENCES];
+        $pick = strtolower((string) $request->query('v', $ranked[0]));
+        if (! array_key_exists($pick, $all)) {
+            $pick = $ranked[0];
         }
 
-        return view('landing-lab', [
-            ...$home->viewData(),
-            'sections' => self::SECTIONS,
-            'picks' => $picks,
-            // The picker's links: the same page with one section's pick changed.
-            'hrefWith' => fn (string $section, string $letter): string => route('landing-lab', [...$picks, $section => $letter]),
+        return view('settings-lab', [
+            ...$settings->viewData($request),
+            'variants' => $all,
+            'ranked' => $ranked,
+            'firstReference' => array_key_first(self::REFERENCES),
+            'pick' => $pick,
+            // The on-screen label: letter, rank and name, so every screenshot stands on its own.
+            'labelFor' => fn (string $letter): string => match (true) {
+                $letter === 'current' => 'Current — live',
+                in_array($letter, $ranked, true) => strtoupper($letter).' · #'.(array_search($letter, $ranked, true) + 1).' — '.$all[$letter][1],
+                default => strtoupper($letter).' · earlier pick — '.$all[$letter][1],
+            },
+            // The picker's links: the same lab with only the variant changed (keeps ?data=sample).
+            'hrefFor' => fn (string $letter): string => route('settings-lab', [...$request->except('v'), 'v' => $letter]),
         ]);
     }
 }
 ```
 
 Type-hinting the live controller and calling `viewData()` keeps its dependencies container-resolved.
-Building `hrefWith` here rather than in a `@php` block keeps the copied layout free of the
-inline-`@php(...)`-then-`@endphp` trap (see "Blade" below).
+Building `labelFor` and `hrefFor` here rather than in a `@php` block keeps the copied layout free of
+the inline-`@php(...)`-then-`@endphp` trap (see "Blade" below).
+
+Variant views are named for their idea, not their letter, because letters are assigned by rank
+after the variants are built. Ranking (or reranking) only reorders `VARIANTS`.
 
 ## Pages behind a login, or with an empty local database
 
@@ -77,7 +88,7 @@ Auth::login(User::firstOrCreate(['email' => 'lab@localhost'], ['name' => 'Lab', 
 Give the user whatever role or tenant the page needs. If the local database has too little data to
 make the page look real, add a `?data=sample` toggle that builds the same value objects the live
 page receives from a fixture. Build them with the real classes, not arrays shaped like them, so a
-variant can't depend on a field production never sends. Keep `live` as the default so the baseline
+variant can't depend on a field production never sends. Keep `live` as the default so Current
 stays honest.
 
 ## The route, local only
@@ -85,121 +96,104 @@ stays honest.
 ```php
 // routes/web.php
 if (app()->isLocal()) {
-    Route::get('/landing-lab', LandingLabController::class)->name('landing-lab');
+    Route::get('/settings-lab', SettingsLabController::class)->name('settings-lab');
 }
 ```
 
 ## The lab view
 
-Copy the live page's layout (`welcome.blade.php`) and replace its fixed `@include`s with a loop. Keep
-any conditional sections conditional (here, commercial renders only with payer data):
+Copy the live page's layout (the shell around the scope) and replace the scope with the picked
+variant, wrapped in `#lab-scope` with its label:
 
 ```blade
-<main>
-    @foreach (array_keys($sections) as $section)
-        @continue($section === 'commercial' && $commercial === null)
-        <div class="relative" id="lab-{{ $section }}">
-            <span class="pointer-events-none absolute left-3 top-3 z-40 rounded-md bg-fuchsia-600 px-2 py-1 font-mono text-[11px] font-medium text-white shadow-lg">
-                {{ $section }} · {{ strtoupper($picks[$section]) }} — {{ $sections[$section][$picks[$section]][1] }}
-            </span>
-            @include($sections[$section][$picks[$section]][0], [
-                {{-- whatever the live page passes per section, e.g. the band surface --}}
-            ])
-        </div>
-    @endforeach
-</main>
+<x-app-layout>
+    <div id="lab-scope" class="relative">
+        <span class="pointer-events-none absolute left-3 top-3 z-40 rounded-md bg-fuchsia-600 px-2 py-1 font-mono text-[11px] font-medium text-white shadow-lg">
+            {{ $labelFor($pick) }}
+        </span>
+        @include($variants[$pick][0])
+    </div>
+</x-app-layout>
 ```
 
+For a section scope, copy the whole live page instead and replace only that section's `@include`.
 Add `<meta name="robots" content="noindex, nofollow">` to the head slot.
 
-The picker, fixed bottom-right. Each letter links to the same page with one pick changed. Under each
-row, a hidden panel holds a checkbox per letter and a note field, so the user can answer "B, with
-D's headline". With no boxes ticked, a section's pick is the letter on screen. Once any are ticked,
-the ticked letters are the pick, whatever is on screen, so looking at another letter never changes
-the answer. Those live in `localStorage`, because every letter click is a full page load, and the
-storage key includes each section's letters, so pruning or adding letters starts a round with empty
-notes:
+The picker, fixed bottom-right: one row with Current, the five letters in ranked order, and any
+earlier pick set apart after them. Each button switches the whole scope. A hidden panel holds a
+checkbox per letter and a note field, so the user can answer "B, with D's copy". With no boxes
+ticked, the pick is the letter on screen. Once any are ticked, the ticked letters are the pick,
+whatever is on screen, so looking at another letter never changes the answer. They live in
+`localStorage`, because every click is a full page load, and the storage key includes the round's
+letters, so a new round starts with an empty mix and note:
 
 ```blade
-<div id="landing-lab-picker" class="fixed bottom-4 right-4 z-50 w-[32rem] max-w-[calc(100vw-2rem)] rounded-xl border bg-white/95 p-3 text-xs shadow-2xl backdrop-blur">
+<div id="lab-picker" data-pick="{{ $pick }}" data-letters="{{ implode('', array_keys($variants)) }}" class="fixed bottom-4 right-4 z-50 w-[28rem] max-w-[calc(100vw-2rem)] rounded-xl border bg-white/95 p-3 text-xs shadow-2xl backdrop-blur">
     <div class="flex items-center justify-between">
-        <p class="font-semibold">Landing lab</p>
-        <button type="button" onclick="var b = document.getElementById('landing-lab-rows'); b.hidden = !b.hidden; localStorage.setItem('landingLabCollapsed', b.hidden ? '1' : '');">Hide / show</button>
+        <p class="font-semibold">Settings lab</p>
+        <button type="button" onclick="var b = document.getElementById('lab-picker-body'); b.hidden = !b.hidden; localStorage.setItem('variantLabCollapsed', b.hidden ? '1' : '');">Hide / show</button>
     </div>
-    <div id="landing-lab-rows" class="mt-2 space-y-1.5">
-        @foreach ($sections as $section => $variants)
-            <div data-lab-section="{{ $section }}" data-lab-pick="{{ $picks[$section] }}" data-lab-letters="{{ implode('', array_keys($variants)) }}">
-                <div class="flex items-center gap-2">
-                    <a href="#lab-{{ $section }}" class="w-20 shrink-0 font-mono">{{ $section }}</a>
-                    <div class="flex gap-1">
-                        @foreach ($variants as $letter => [$view, $label])
-                            <a href="{{ $hrefWith($section, $letter) }}#lab-{{ $section }}" title="{{ $label }}" @class([
-                                'grid size-7 place-items-center rounded-md border font-mono font-semibold uppercase',
-                                'border-fuchsia-600 bg-fuchsia-600 text-white' => $picks[$section] === $letter,
-                            ])>{{ $letter }}</a>
-                        @endforeach
-                    </div>
-                    <button type="button" data-lab-toggle class="shrink-0 rounded-md border px-1.5 py-1 text-zinc-500" title="Mix in other variants or leave a note">+ mix / note</button>
-                    <span class="min-w-0 truncate text-zinc-500">{{ $variants[$picks[$section]][1] }}</span>
-                </div>
-                <div data-lab-extra hidden class="mt-1 space-y-1 pl-22">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-zinc-500">Take from</span>
-                        @foreach ($variants as $letter => [$view, $label])
-                            <label class="flex items-center gap-1 font-mono uppercase" title="{{ $label }}"><input type="checkbox" value="{{ $letter }}"> {{ $letter }}</label>
-                        @endforeach
-                    </div>
-                    <input type="text" data-lab-note class="w-full rounded border px-2 py-1" placeholder="What to take from each, or what to change">
-                </div>
+    <div id="lab-picker-body" class="mt-2 space-y-1.5">
+        <div class="flex items-center gap-1">
+            @foreach ($variants as $letter => [$view, $name])
+                @if ($letter === $ranked[0] || $letter === $firstReference)
+                    <span class="mx-1 h-5 border-l"></span>
+                @endif
+                <a href="{{ $hrefFor($letter) }}" title="{{ $labelFor($letter) }}" @class([
+                    'grid h-7 min-w-7 place-items-center rounded-md border px-1.5 font-mono font-semibold',
+                    'border-fuchsia-600 bg-fuchsia-600 text-white' => $pick === $letter,
+                ])>{{ $letter === 'current' ? 'Current' : strtoupper($letter) }}</a>
+            @endforeach
+            <button type="button" data-lab-toggle class="ml-auto shrink-0 rounded-md border px-1.5 py-1 text-zinc-500" title="Mix variants or leave a note">+ mix / note</button>
+        </div>
+        <p class="truncate text-zinc-500">{{ $labelFor($pick) }}</p>
+        <div data-lab-extra hidden class="space-y-1">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-zinc-500">Take from</span>
+                @foreach ($variants as $letter => [$view, $name])
+                    @continue($letter === 'current')
+                    <label class="flex items-center gap-1 font-mono uppercase" title="{{ $labelFor($letter) }}"><input type="checkbox" value="{{ $letter }}"> {{ $letter }}</label>
+                @endforeach
             </div>
-        @endforeach
-        <pre id="landing-lab-picks" class="whitespace-pre-wrap pt-1 font-mono text-[11px] text-zinc-500"></pre>
+            <input type="text" data-lab-note class="w-full rounded border px-2 py-1" placeholder="What to take from each, or what to change">
+        </div>
+        <pre id="lab-pick" class="whitespace-pre-wrap pt-1 font-mono text-[11px] text-zinc-500"></pre>
         <div class="flex gap-2">
-            <button type="button" id="landing-lab-copy" class="rounded-md border px-2 py-1 font-medium">Copy picks</button>
-            <button type="button" id="landing-lab-clear" class="rounded-md px-2 py-1 text-zinc-500">Clear mixes and notes</button>
+            <button type="button" id="lab-copy" class="rounded-md border px-2 py-1 font-medium">Copy pick</button>
+            <button type="button" id="lab-clear" class="rounded-md px-2 py-1 text-zinc-500">Clear mix and note</button>
         </div>
     </div>
 </div>
 <script>
 (() => {
-    const rows = [...document.querySelectorAll('[data-lab-section]')];
-    const key = 'landingLab:' + location.pathname + ':' + rows.map((r) => r.dataset.labSection + '=' + r.dataset.labLetters).join(',');
-    const saved = JSON.parse(localStorage.getItem(key) || '{}');
-    const out = document.getElementById('landing-lab-picks');
+    const picker = document.getElementById('lab-picker');
+    const key = 'variantLab:' + location.pathname + ':' + picker.dataset.letters;
+    const state = Object.assign({ mix: [], note: '' }, JSON.parse(localStorage.getItem(key) || '{}'));
+    const out = document.getElementById('lab-pick');
+    const boxes = [...picker.querySelectorAll('input[type=checkbox]')];
+    const note = picker.querySelector('[data-lab-note]'), extra = picker.querySelector('[data-lab-extra]');
+    const name = (letter) => (letter === 'current' ? 'Current' : letter.toUpperCase());
 
     const render = () => {
-        const picks = [], notes = [];
-        for (const row of rows) {
-            const section = row.dataset.labSection, state = saved[section];
-            picks.push(section + '=' + (state.mix.length ? state.mix : [row.dataset.labPick]).join('+').toUpperCase());
-            if (state.note.trim()) notes.push(section + ': ' + state.note.trim());
-        }
-        out.textContent = 'Picks: ' + picks.join(' ') + (notes.length ? '\nNotes:\n' + notes.join('\n') : '');
-        localStorage.setItem(key, JSON.stringify(saved));
+        const pick = state.mix.length ? state.mix.map(name).join('+') : name(picker.dataset.pick);
+        out.textContent = 'Pick: ' + pick + (state.note.trim() ? '\nNote: ' + state.note.trim() : '');
+        localStorage.setItem(key, JSON.stringify(state));
     };
 
-    for (const row of rows) {
-        const section = row.dataset.labSection;
-        const boxes = [...row.querySelectorAll('input[type=checkbox]')];
-        const note = row.querySelector('[data-lab-note]'), extra = row.querySelector('[data-lab-extra]');
-        const state = (saved[section] ??= { mix: [], note: '' });
-
-        boxes.forEach((b) => {
-            b.checked = state.mix.includes(b.value);
-            b.addEventListener('change', () => {
-                state.mix = boxes.filter((x) => x.checked).map((x) => x.value);
-                render();
-            });
+    boxes.forEach((b) => {
+        b.checked = state.mix.includes(b.value);
+        b.addEventListener('change', () => {
+            state.mix = boxes.filter((x) => x.checked).map((x) => x.value);
+            render();
         });
-        note.value = state.note;
-        note.addEventListener('input', () => { state.note = note.value; render(); });
-        extra.hidden = !state.mix.length && !state.note;
-        row.querySelector('[data-lab-toggle]').addEventListener('click', () => { extra.hidden = !extra.hidden; });
-    }
-
-    document.getElementById('landing-lab-copy').addEventListener('click', () => navigator.clipboard.writeText(out.textContent));
-    document.getElementById('landing-lab-clear').addEventListener('click', () => { localStorage.removeItem(key); location.reload(); });
-    if (localStorage.getItem('landingLabCollapsed')) document.getElementById('landing-lab-rows').hidden = true;
+    });
+    note.value = state.note;
+    note.addEventListener('input', () => { state.note = note.value; render(); });
+    extra.hidden = !state.mix.length && !state.note;
+    picker.querySelector('[data-lab-toggle]').addEventListener('click', () => { extra.hidden = !extra.hidden; });
+    document.getElementById('lab-copy').addEventListener('click', () => navigator.clipboard.writeText(out.textContent));
+    document.getElementById('lab-clear').addEventListener('click', () => { localStorage.removeItem(key); location.reload(); });
+    if (localStorage.getItem('variantLabCollapsed')) document.getElementById('lab-picker-body').hidden = true;
     render();
 })();
 </script>
@@ -208,30 +202,35 @@ notes:
 The copied text reads like this, and it's what the user pastes back:
 
 ```
-Picks: hero=B+D how=C proof=A
-Notes:
-hero: B's split layout, D's headline
-proof: shorter, drop the third logo
+Pick: B+D
+Note: B's layout, D's copy on the billing card
 ```
 
 ## Variant files
 
-`resources/views/partials/home/variants/{section}-{letter}.blade.php`. Seed every registered one
-with a placeholder before writing any:
+One directory per variant, named for its idea: `resources/views/settings/variants/{name}/`, with an
+`index.blade.php` entry and any partials it needs beside it, so a worker never edits another
+variant's files. Seed every one of the round's five with a placeholder before writing any:
 
 ```sh
-for s in hero how commercial workspace api cta; do for l in b c; do
-  echo "<x-home.section><p>$s-$l placeholder</p></x-home.section>" > resources/views/partials/home/variants/$s-$l.blade.php
-done; done
+for v in two-column attention-first tabs single-scroll drawer-edit; do
+  mkdir -p resources/views/settings/variants/$v
+  echo "<div class=\"p-8\">$v placeholder</div>" > resources/views/settings/variants/$v/index.blade.php
+done
 ```
 
-Shared helpers between a section's variants live beside them with the section's prefix
-(`how-scenarios.php` returning an array, `workspace-grid.blade.php`), so a worker never edits
-another section's files.
+Register them in `VARIANTS` under provisional letters so workers can load and check their own;
+reorder the array once you've ranked them.
 
-If the live section has an inline `<script>` bound to element ids, move it into its own partial
-(`partials/home/hero-script.blade.php`) and `@include` it from the live section and from each
+If the live view has an inline `<script>` bound to element ids, move it into its own partial
+(`settings/partials/billing-script.blade.php`) and `@include` it from the live view and from each
 variant.
+
+## Parts varied separately
+
+Only when the user asks for it by name. Give each part its own query key (`?header=b&form=g`), its
+own ranked registry, its own picker row and its own `#lab-<part>` wrapper, and make the copied line
+read `Pick: header=B form=G`.
 
 ## Blade
 
@@ -244,15 +243,15 @@ variant.
 
 ## CSS
 
-If the page's stylesheet scopes Tailwind's scan with explicit `@source` lines (a landing-only CSS
+If the page's stylesheet scopes Tailwind's scan with explicit `@source` lines (a page-specific CSS
 entry often does), the lab view's classes won't be generated. Add one line, marked for removal:
 
 ```css
-/* Local-only variant picker (LandingLabController); drop with the lab. */
-@source '../views/landing-lab.blade.php';
+/* Local-only variant lab (SettingsLabController); drop with the lab. */
+@source '../views/settings-lab.blade.php';
 ```
 
-Check that the variants directory is already covered (`@source '../views/partials/home';` is).
+Check that the variants directory is already covered (`@source '../views/settings';` is).
 
 Then build in watch mode, once, in the background:
 
@@ -268,11 +267,11 @@ assets pile up instead, which is harmless locally. Clear them at promotion with 
 ## Checks
 
 ```sh
-for s in hero how commercial workspace api cta; do for l in a b c; do
-  c=$(curl -s -o /dev/null -w "%{http_code}" "https://app.test/landing-lab?$s=$l"); [ "$c" != 200 ] && echo "FAIL $s=$l $c"
-done; done
-curl -s -o /dev/null -w "live %{http_code}\n" https://app.test/
+for v in current a b c d e; do
+  c=$(curl -s -o /dev/null -w "%{http_code}" "https://app.test/settings-lab?v=$v"); [ "$c" != 200 ] && echo "FAIL v=$v $c"
+done
+curl -s -o /dev/null -w "live %{http_code}\n" https://app.test/settings   # 302 to login is fine for a signed-in page
 ```
 
 Then run Pint and PHPStan on the touched PHP, and the tests that render the live page, to confirm the
-`viewData()` extraction changed nothing.
+`viewData()` extraction and the body partial changed nothing.
