@@ -1,7 +1,7 @@
 # Variant lab taste
 
 ## Calibration
-visual: recommendation picked 0 of 1 ranked rounds (last: no)
+visual: recommendation picked 0 of 2 ranked rounds (last: no, no; challenger won round 2)
 engineering: no ranked rounds yet
 product: no ranked rounds yet
 
@@ -50,7 +50,8 @@ product: no ranked rounds yet
 
 - [visual] one design per object; a state (pinned, featured) marks it rather than swapping in a different layout · stated 2026-11-25
 - [visual] iOS app: no settings button; tapping the Orrin contact card opens Settings · stated 2026-11-25
-- [visual] iOS app: a drawn range-vs-target meter over a literal copy of Messages' header · 1 for, 0 against · last 2026-11-25
+- [visual] iOS app: the day drawn against the target over text-only numbers or a literal copy of Messages' header · 2 for, 0 against · last 2026-11-25
+- [visual] the brand mark doubling as the data (icon ring fills with the day) over a separate bar or meter · 1 for, 0 against · last 2026-11-25
 
 ## Open questions
 - [visual] page-level tabs vs one scrolling page: tabs won 4 (breezyfees ×2, profile editor ×2), one page won 3 (settings, sync setup, events)

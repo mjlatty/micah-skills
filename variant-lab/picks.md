@@ -854,3 +854,9 @@ offered: A Messages header (rec) · B liquid card + composer tray · C range met
 picked: C · note: "I like c the best, we can get rid of settings button and let it be triggered by clicking the orrin contact card"
 recommendation picked: no
 taste: the day drawn as a concrete artifact (range band against the target, what's left shown without a tap) under a small centered icon-and-name capsule; send on its own glass beside the field; one fewer control (the card opens Settings); passed on the literal Messages stack, the fused card, the left-aligned row and plain grey text
+
+## 2026-11-25 · mjlatty/orrin · visual · iOS chat glass chrome · round 2
+offered: F C with card opening Settings (rec) · G one panel · H meter in the card · I meal segments · J ring (challenger: the icon as the meter over a separate bar)
+picked: J (final) · note: "I like 5 - and I think we should update the app icon to use that \"partial completion\" ring look too"
+recommendation picked: no
+taste: the brand mark doubling as the data (the icon's ring fills with the day) over a separate bar; numbers as one quiet line under the name; carried the motif into the app icon
