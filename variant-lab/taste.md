@@ -49,6 +49,7 @@ product: no ranked rounds yet
 - [visual] light page over dark spine or dark chapters · 1 for, 0 against · last 2026-11-24
 
 - [visual] one design per object; a state (pinned, featured) marks it rather than swapping in a different layout · stated 2026-11-25
+- [visual] iOS app header: bare numbers ("980–1,510") over units, targets and "left" clarifiers, which are clutter · stated 2026-11-25
 - [visual] iOS app: no settings button; tapping the Orrin contact card opens Settings · stated 2026-11-25
 - [visual] iOS app: the day drawn against the target over text-only numbers or a literal copy of Messages' header · 2 for, 0 against · last 2026-11-25
 - [visual] the brand mark doubling as the data (icon ring fills with the day) over a separate bar or meter · 1 for, 0 against · last 2026-11-25
