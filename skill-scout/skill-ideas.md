@@ -344,6 +344,10 @@
 - [ ] `2026-11-25` `karachi` `#worktree-vendor-symlink-tests-wrong-code` — briefed 6 parallel worktree agents to symlink vendor/ from the main workspace; composer autoload resolves App\ through the symlink realpath, so Pest silently ran the main workspace code, not the branch; caught by 1 agent after ~11 min, 5 others had to re-run tests; Fix: in Laravel worktrees clone vendor with cp -cR (APFS CoW) + composer dump-autoload, never symlink <!-- scout:session=3e7fb9dd-99ca-4ddd-9adf-2283f6524109 -->
 - [ ] `2026-11-25` `astana` `#orrin-evals-no-local-key` — orrin:evals needs ANTHROPIC_API_KEY but the workspace .env has none, so testing changed resources/parsing files meant building a symlinked copy of the app under /tmp on the prod server; ~4 tool calls; Fix: document a local dev key in .env.example/conductor copy list, or give orrin:evals a --dir option for the parsing files <!-- scout:session=9f48d16e-6f04-450e-8ab6-e3356e928cb9 -->
 - [ ] `2026-11-25` `colombo` `#artisan-tinker-file-arg-hangs` — orrin: `php artisan tinker /tmp/x.php` hung to the 120s timeout again; cost ~2 min + a background task; Fix: use `php artisan tinker --execute="$(cat file)"` or a bootstrap script <!-- scout:session=85a37ce5-31bb-4602-b4aa-19821f319569 -->
+- [ ] `2026-11-25` `curitiba-v1` `#zsh-nomatch-glob-runs-full-suite` — `php artisan test $(ls tests/Feature/*A* tests/Feature/*B*)` with one glob unmatched made zsh empty the substitution, so the full 619-test Pest suite ran (~25s) against the user rule; Fix: pass explicit test file paths, never ls-globs, to artisan test <!-- scout:session=75a9451b-ac46-496b-b064-71881698bb1f -->
+- [ ] `2026-11-25` `podgorica` `#pest-expects-output-one-write` — expectsOutputToContain: each expectation consumes one write, so two expectations against one multi-line $this->line() fail; measured cost 2 debug runs; Fix: print multi-line output line by line, or one expectation per write <!-- scout:session=833b3a70-7a8b-4727-a37c-8c87052eb54a -->
+
+
 
 
 
