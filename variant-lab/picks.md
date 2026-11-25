@@ -871,3 +871,15 @@ offered: A one page, worst first (rec) · B overview with side rails · C inbox,
 picked: B · note: "I think I like B"
 recommendation picked: no
 taste: everything visible on one screen, attention first (illegal callout, budget bar), queue grouped by tier, tools in a side rail; passed on one-case-at-a-time inbox, expand-to-see table rows, tabs, and a single long column with an index
+
+## 2026-11-25 · mjlatty/linkfount-tall · visual · admin moderation page · round 2
+offered: F B steadied (rec) · G harm expanded, spam as rows (challenger: density) · H status board that filters the queue · I rail on the left as the control panel · J three columns: index, queue, tools
+picked: J · note: "I like J" (after asking which I recommend; I said F)
+recommendation picked: no
+taste: a persistent left index (illegal alert, tier jump links with counts, budget) beside the queue, tools in a right rail, all three panes always visible; passed on a top status band, compact spam rows, status tiles, and one left rail holding everything
+
+## 2026-11-25 · mjlatty/linkfount-tall · visual · admin moderation page · final
+offered: round 3 (K–O around J) was cancelled before it was built
+picked: J · note: "promote J"
+recommendation picked: no (recommended F)
+taste: final = three panes always visible: sticky left status index, queue grouped by tier with full flags, sticky right tools rail
