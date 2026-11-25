@@ -889,3 +889,9 @@ offered: A the thread, headline + three real exchanges (rec) · B ring is the da
 picked: E · note: "I like E, but probably make it "Log meals and workouts in convenient shorthand" with orrin name in small text"
 recommendation picked: no
 taste: for a share image, a plain dark brand card (ring, one claim) over showing the product; the claim is the headline and the name goes small; passed on the thread, the ring as data, the timeline and the poster message
+
+## 2026-11-25 · mjlatty/orrin · visual · OG share image · round 2 (final)
+offered: F E's ring on top, headline in the name's place (rec) · G centered small lockup · H left headline, ring cropped by the right edge · I same card on amber · J headline + two real messages (challenger: a hint of the product on the plain card)
+picked: H (final) · notes: "H - is the brand + address too small tho?", then "seems still too small, especially the orrin.app part" (enlarged 26px -> 60/52px), then promoted via PR
+recommendation picked: no
+taste: bolder asymmetric layout (headline left, mark cropped off the edge) over centered, symmetrical cards; brand name and address big enough to read at iMessage size, not a quiet footer

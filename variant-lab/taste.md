@@ -1,7 +1,7 @@
 # Variant lab taste
 
 ## Calibration
-visual: recommendation picked 0 of 3 rounds (last 3: no, no, no); moderation lab ended on J, not my F — rank the bolder structural layout above the restrained tidy-up
+visual: recommendation picked 0 of 4 rounds (last 3: no, no, no); OG lab also went to the bolder layout (H) over the literal reading of the note (F); moderation lab ended on J, not my F — rank the bolder structural layout above the restrained tidy-up
 
 ## General
 
@@ -14,7 +14,8 @@ visual: recommendation picked 0 of 3 rounds (last 3: no, no, no); moderation lab
 - [any] copy: labels + one rule line; cut instructions and reassurances · stated 2026-11-17
 
 ## mjlatty/orrin
-- [visual] share/OG image: plain dark brand card (ring + one claim) over a product artifact; claim as headline, name small · 1 for, 0 against · last 2026-11-25
+- [visual] share/OG image: plain dark brand card (ring + one claim) over a product artifact; headline left, ring cropped off the edge · 2 for, 0 against · last 2026-11-25
+- [visual] small text must read at the smallest real size (iMessage ~280px); asked twice to enlarge the name/address · 1 for, 0 against · last 2026-11-25
 - [visual] concrete real day with numbers that add up on the landing page (not the share image) · 4 for, 0 against · last 2026-11-24
 - [visual] brand mark doubling as data (ring = day's calories) in the app · 1 for, 0 against · last 2026-11-25
 
