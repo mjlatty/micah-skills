@@ -343,6 +343,8 @@
 - [ ] `2026-11-25` `sao-paulo-v2` `#variant-lab-shoot-lazy-images` — shoot.mjs mobile captures of sections below the fold show empty picture frames (loading=lazy never triggers before the element screenshot), Current included; cost: a reshoot round + caveat; Fix: shoot.mjs scrolls the page through once (or sets img.loading=eager) and waits for img.complete before capturing <!-- scout:session=48dacb58-0590-462e-9eed-d7584770a740 -->
 - [ ] `2026-11-25` `karachi` `#worktree-vendor-symlink-tests-wrong-code` — briefed 6 parallel worktree agents to symlink vendor/ from the main workspace; composer autoload resolves App\ through the symlink realpath, so Pest silently ran the main workspace code, not the branch; caught by 1 agent after ~11 min, 5 others had to re-run tests; Fix: in Laravel worktrees clone vendor with cp -cR (APFS CoW) + composer dump-autoload, never symlink <!-- scout:session=3e7fb9dd-99ca-4ddd-9adf-2283f6524109 -->
 - [ ] `2026-11-25` `astana` `#orrin-evals-no-local-key` — orrin:evals needs ANTHROPIC_API_KEY but the workspace .env has none, so testing changed resources/parsing files meant building a symlinked copy of the app under /tmp on the prod server; ~4 tool calls; Fix: document a local dev key in .env.example/conductor copy list, or give orrin:evals a --dir option for the parsing files <!-- scout:session=9f48d16e-6f04-450e-8ab6-e3356e928cb9 -->
+- [ ] `2026-11-25` `colombo` `#artisan-tinker-file-arg-hangs` — orrin: `php artisan tinker /tmp/x.php` hung to the 120s timeout again; cost ~2 min + a background task; Fix: use `php artisan tinker --execute="$(cat file)"` or a bootstrap script <!-- scout:session=85a37ce5-31bb-4602-b4aa-19821f319569 -->
+
 
 
 
