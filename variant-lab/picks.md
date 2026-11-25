@@ -883,3 +883,9 @@ offered: round 3 (K–O around J) was cancelled before it was built
 picked: J · note: "promote J"
 recommendation picked: no (recommended F)
 taste: final = three panes always visible: sticky left status index, queue grouped by tier with full flags, sticky right tools rail
+
+## 2026-11-25 · mjlatty/orrin · visual · OG share image · round 1
+offered: A the thread, headline + three real exchanges (rec) · B ring is the day · C the day as a ribbon · D shorthand decoded, one message huge · E brand card: ring, name, one line (challenger: plain brand card over a product artifact)
+picked: E · note: "I like E, but probably make it "Log meals and workouts in convenient shorthand" with orrin name in small text"
+recommendation picked: no
+taste: for a share image, a plain dark brand card (ring, one claim) over showing the product; the claim is the headline and the name goes small; passed on the thread, the ring as data, the timeline and the poster message
