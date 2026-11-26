@@ -9,6 +9,7 @@ Agent skills, kept in one place and installed into whichever harnesses are on th
 | `icp-definition` | Ranked, evidence-based customer profiles, written to the project as an `icps/` folder |
 | `linked-prs` | Remembers the PRs a workspace opened, so a request about "the linked PRs" reaches every one of them, not just the checked-out branch's PR |
 | `monetization-strategy` | Ranked revenue paths with unit economics, scoped to a solo founder's constraints |
+| `plan-docs` | Turns an agreed plan into a file the project keeps, and sorts `plans/` into draft/ready/in-progress/done by what the repo shows rather than what the plan claims |
 | `post-deploy-checklist` | Captures manual post-deploy steps into a durable file that `pr-description` renders into the PR body |
 | `pr-description` | Skimmable PR bodies covering why the change exists, the business context and concepts behind it, its tradeoffs, and its risks |
 | `product-changelog` | User-facing feature announcements from a branch |
