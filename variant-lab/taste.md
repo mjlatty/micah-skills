@@ -1,7 +1,7 @@
 # Variant lab taste
 
 ## Calibration
-visual: recommendation picked 0 of 4 rounds (last 3: no, no, no); OG lab also went to the bolder layout (H) over the literal reading of the note (F); moderation lab ended on J, not my F — rank the bolder structural layout above the restrained tidy-up
+visual: recommendation picked 0 of 4 rounds, partly 1 (last 3: no, no, partly — orrin replies: A two voices mixed with B); OG lab also went to the bolder layout (H) over the literal reading of the note (F); moderation lab ended on J, not my F — rank the bolder structural layout above the restrained tidy-up
 
 ## General
 
@@ -18,7 +18,9 @@ visual: recommendation picked 0 of 4 rounds (last 3: no, no, no); OG lab also we
 - [visual] small text must read at the smallest real size (iMessage ~280px); asked twice to enlarge the name/address · 1 for, 0 against · last 2026-11-25
 - [visual] concrete real day with numbers that add up on the landing page (not the share image) · 4 for, 0 against · last 2026-11-24
 - [visual] brand mark doubling as data (ring = day's calories) in the app · 1 for, 0 against · last 2026-11-25
+- [visual] thread replies: hierarchy (quiet confirmations, full cards for answers/PRs) over every reply weighted the same · 1 for, 0 against · last 2026-11-25
+- [visual] drawn figures sparingly, where they earn it, over a band under every reply · stated 2026-11-25 ("don't love B having so many range bands")
 
 ## Open questions
 - [visual] concrete artifacts vs plain brand: landing + app went concrete, the OG image went plain — depends on surface size?
-- [visual] density: calm full cards vs compact rows — compact spam rows (G) passed over once; one more round before calling it
+- [visual] density: calm full cards vs compact rows — compact spam rows (G) passed over once; orrin replies passed on dense receipt slips (C); one more round before calling it

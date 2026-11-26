@@ -895,3 +895,9 @@ offered: F E's ring on top, headline in the name's place (rec) · G centered sma
 picked: H (final) · notes: "H - is the brand + address too small tho?", then "seems still too small, especially the orrin.app part" (enlarged 26px -> 60/52px), then promoted via PR
 recommendation picked: no
 taste: bolder asymmetric layout (headline left, mark cropped off the edge) over centered, symmetrical cards; brand name and address big enough to read at iMessage size, not a quiet footer
+
+## 2026-11-25 · mjlatty/orrin · visual · iOS Orrin replies · round 1
+offered: A two voices (rec) · B range bands · C receipts · D stat cards · E tidy bubbles (challenger: restraint over a new form)
+picked: A+B · note: "some blend of A and B I think I like - I don't love B having so many range bands tho"
+recommendation picked: partly
+taste: answers and PRs get Orrin's full voice while "Logged …" confirmations go quiet under your bubble, with a drawn figure only where it earns it; passed on a band under every reply, the receipt slips, the big-number cards and the restrained tidy-up
