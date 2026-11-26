@@ -919,3 +919,9 @@ offered: recommended mix (brass default, forest, blush, ocean, sand, plum, graph
 picked: mix + terracotta, Forest default · note: "terracotta would be nice add. forest probably best default"
 recommendation picked: partly (kept the mix, changed the default from Brass to Forest, added Terracotta)
 taste: deep, earthy heritage tones lead (forest default, terracotta added) over the amber/brass lineage; accepted trimming near-duplicates to one per family
+
+## 2026-11-25 · mjlatty/orrin · visual · accent colour set · round 5
+offered: the same eight, Forest default
+picked: Brass default · note: "lets do brass by default actually"
+recommendation picked: yes (Brass was the original recommended default)
+taste: keeps the warm gold lineage as the brand default; the deep/earthy tones are choices, not the face of the brand
