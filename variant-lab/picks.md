@@ -925,3 +925,4 @@ offered: the same eight, Forest default
 picked: Brass default · note: "lets do brass by default actually"
 recommendation picked: yes (Brass was the original recommended default)
 taste: keeps the warm gold lineage as the brand default; the deep/earthy tones are choices, not the face of the brand
+final: promoted 2026-11-25 — eight themes in Settings > Appearance (brass default, forest, terracotta, blush, plum, ocean, sand, graphite), alternate icons, site moved to brass. Profile re-checked: still deep/muted earthy tones over bright defaults; a set to pick from over one colour.
