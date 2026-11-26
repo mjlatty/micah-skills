@@ -907,3 +907,9 @@ offered: F report sheet, auto-opens (rec) · G answer hero · H one band each ·
 picked: F+G (final) · notes: mid-round "I also wonder if the reports should add a summary card to the thread and then autoopen modal where you can see the details...", then asked for my recommendation (F with G's PR card), then "Lets do it - but lets also add more semantic colors - e.g., good things green, bad things red"
 recommendation picked: yes (F with G's PR card, as recommended)
 taste: long answers as a short summary card that opens a sheet over a tall card in the thread; a PR set large; semantic color (green good, red bad) on top of the single amber accent; passed on big numbers everywhere and a sheet for short mid-workout answers
+
+## 2026-11-25 · mjlatty/orrin · visual · accent colour set (in-app picker) · rounds 1–3
+offered: one-pick lab (saffron, cobalt, iris, glacier, volt) dropped mid-build for their own idea, a user-picked set; then Tailwind set (amber, green, pink, violet, sky, slate, stone, mauve, olive); then a premium set (forest, ocean, ink, plum, moss, dusk, brass, blush, sand)
+picked: premium set · notes: "maybe ideal would be to have a set of color options ... and let user pick (and let them change the app icon accordingly)", "More of a lime green would be better", "more premium color palette - e.g. more forest green, oceany blue", "I like the premium set"; asked twice for accessibility contrast on every theme
+recommendation picked: n/a (their idea; asked for a balanced mix next)
+taste: deep, muted, heritage colours over Tailwind's bright candy palette; a choice of themes over one brand colour; every theme must pass contrast

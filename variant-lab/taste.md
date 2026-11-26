@@ -22,6 +22,8 @@ visual: recommendation picked 1 of 6 rounds, partly 1 (last 3: no, partly, yes �
 - [visual] drawn figures sparingly, where they earn it, over a band under every reply · stated 2026-11-25 ("don't love B having so many range bands")
 - [visual] long answers as a summary card that opens a sheet, over a tall card in the thread · stated 2026-11-25 (their own idea)
 - [visual] semantic color in the app: green for good, red for bad, alongside the amber accent · stated 2026-11-25
+- [visual] colour: deep, muted 'premium' tones (forest, ocean, plum) over Tailwind's bright defaults · 1 for, 0 against · last 2026-11-25
+- [visual] accessibility: every colour variant must pass WCAG AA contrast, checked and shown · stated 2026-11-25
 
 ## Open questions
 - [visual] concrete artifacts vs plain brand: landing + app went concrete, the OG image went plain — depends on surface size?
