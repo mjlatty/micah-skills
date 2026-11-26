@@ -901,3 +901,9 @@ offered: A two voices (rec) · B range bands · C receipts · D stat cards · E 
 picked: A+B · note: "some blend of A and B I think I like - I don't love B having so many range bands tho"
 recommendation picked: partly
 taste: answers and PRs get Orrin's full voice while "Logged …" confirmations go quiet under your bubble, with a drawn figure only where it earns it; passed on a band under every reply, the receipt slips, the big-number cards and the restrained tidy-up
+
+## 2026-11-25 · mjlatty/orrin · visual · iOS Orrin replies · round 2 (final)
+offered: F report sheet, auto-opens (rec) · G answer hero · H one band each · I tap for the day · J every answer a sheet (challenger: auto-open sheets mid-workout)
+picked: F+G (final) · notes: mid-round "I also wonder if the reports should add a summary card to the thread and then autoopen modal where you can see the details...", then asked for my recommendation (F with G's PR card), then "Lets do it - but lets also add more semantic colors - e.g., good things green, bad things red"
+recommendation picked: yes (F with G's PR card, as recommended)
+taste: long answers as a short summary card that opens a sheet over a tall card in the thread; a PR set large; semantic color (green good, red bad) on top of the single amber accent; passed on big numbers everywhere and a sheet for short mid-workout answers
