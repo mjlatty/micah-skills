@@ -913,3 +913,9 @@ offered: one-pick lab (saffron, cobalt, iris, glacier, volt) dropped mid-build f
 picked: premium set · notes: "maybe ideal would be to have a set of color options ... and let user pick (and let them change the app icon accordingly)", "More of a lime green would be better", "more premium color palette - e.g. more forest green, oceany blue", "I like the premium set"; asked twice for accessibility contrast on every theme
 recommendation picked: n/a (their idea; asked for a balanced mix next)
 taste: deep, muted, heritage colours over Tailwind's bright candy palette; a choice of themes over one brand colour; every theme must pass contrast
+
+## 2026-11-25 · mjlatty/orrin · visual · accent colour set · round 4
+offered: recommended mix (brass default, forest, blush, ocean, sand, plum, graphite — one per colour family; graphite new)
+picked: mix + terracotta, Forest default · note: "terracotta would be nice add. forest probably best default"
+recommendation picked: partly (kept the mix, changed the default from Brass to Forest, added Terracotta)
+taste: deep, earthy heritage tones lead (forest default, terracotta added) over the amber/brass lineage; accepted trimming near-duplicates to one per family
